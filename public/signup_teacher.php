@@ -16,6 +16,12 @@ if ($as === null) {
 
 $pdo = getDB();
 
+// Initialize arrays early to prevent undefined variable warnings
+$departments = [];
+$subjectsData = [];
+$strandsData = [];
+$dbError = '';
+
 $error = '';
 $success = false;
 $surname = $middle_name = $given_name = $department = $strand = $email = '';
@@ -72,12 +78,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Initialize variables to prevent undefined errors
-$departments = [];
-$subjectsData = [];
-$strandsData = [];
-$dbError = '';
-
 // Load departments and subjects data for the form
 try {
     $departments = $pdo->query("SELECT department_id, department_name FROM departments ORDER BY department_name")->fetchAll();
@@ -118,9 +118,10 @@ $base = rtrim(WEB_BASE, '/');
                             <div class="alert alert-success">
                                 <strong>Account created.</strong> You can now log in with your university email and password.
                             </div>
-                            <p class="text-center mb-0">
-                                <a href="<?php echo $base; ?>/public/login.php?as=teacher" class="btn btn-success">Go to Teacher login</a>
-                            </p>
+                            <div class="d-grid gap-2 d-md-flex justify-content-center">
+                                <a href="<?php echo $base; ?>/public/login.php?as=teacher&username=<?php echo urlencode($email); ?>&next=dashboard" class="btn btn-success">Proceed to Dashboard</a>
+                                <a href="<?php echo $base; ?>/public/login.php?as=teacher&username=<?php echo urlencode($email); ?>" class="btn btn-outline-secondary">Back to Login</a>
+                            </div>
                         <?php else: ?>
                             <?php if ($error): ?>
                                 <div class="alert alert-danger py-2"><?php echo htmlspecialchars($error); ?></div>

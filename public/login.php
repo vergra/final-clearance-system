@@ -37,7 +37,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         $loginResult = attemptLogin($username, $password, $as);
         if ($loginResult === true) {
-            $redirect = $_SESSION['login_redirect'] ?? rtrim(WEB_BASE, '/') . '/public/index.php';
+            // If next=dashboard and role is teacher, go to teacher dashboard
+            if (isset($_GET['next']) && $_GET['next'] === 'dashboard' && $as === 'teacher') {
+                $redirect = rtrim(WEB_BASE, '/') . '/teacher/clearance/index.php';
+            } else {
+                $redirect = $_SESSION['login_redirect'] ?? rtrim(WEB_BASE, '/') . '/public/index.php';
+            }
             unset($_SESSION['login_redirect']);
             header('Location: ' . $redirect);
             exit;
@@ -88,7 +93,7 @@ $roleIcon = ['student' => 'bi-person-video3 text-primary', 'teacher' => 'bi-pers
                     <?php if ($as): ?><input type="hidden" name="as" value="<?php echo htmlspecialchars($as); ?>"><?php endif; ?>
                     <div class="mb-3">
                         <label for="username" class="form-label"><?php echo ($as === 'student' || $as === 'teacher') ? 'University email' : 'Username'; ?></label>
-                        <input type="<?php echo ($as === 'student' || $as === 'teacher') ? 'email' : 'text'; ?>" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($_POST['username'] ?? ''); ?>" autocomplete="<?php echo ($as === 'student' || $as === 'teacher') ? 'email' : 'username'; ?>" autofocus required>
+                        <input type="<?php echo ($as === 'student' || $as === 'teacher') ? 'email' : 'text'; ?>" class="form-control" id="username" name="username" value="<?php echo htmlspecialchars($_GET['username'] ?? $_POST['username'] ?? ''); ?>" autocomplete="<?php echo ($as === 'student' || $as === 'teacher') ? 'email' : 'username'; ?>" autofocus required>
                     </div>
                     <div class="mb-3">
                         <label for="password" class="form-label">Password</label>
