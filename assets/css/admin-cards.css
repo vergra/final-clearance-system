@@ -1,0 +1,18 @@
+/* Admin Dashboard Card Hover Effects */
+.admin-dashboard-card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    cursor: pointer;
+}
+
+.admin-dashboard-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.admin-dashboard-card:active {
+    transform: translateY(0);
+}
+
+.text-decoration-none:hover .admin-dashboard-card {
+    text-decoration: none !important;
+}
