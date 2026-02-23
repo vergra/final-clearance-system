@@ -1,0 +1,60 @@
+# XAMPP/Server logs and temp
+logs/
+tmp/
+temp/
+
+# Database backups and sensitive files
+*.sql
+*.db
+*.sqlite
+config/database.php
+
+# Environment and secrets
+.env
+.env.*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Cache and session files
+cache/
+sessions/
+uploads/
+
+# Composer (if you ever add it)
+vendor/
+composer.lock
+
+# Node.js (if you ever add it)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build/dist folders (if you ever add them)
+dist/
+build/
+
+# User-uploaded files (if any)
+public/uploads/
+public/files/
+
+# PHPUnit/coverage (if you add tests)
+.phpunit.result.cache
+coverage/
+
+# Logs
+*.log

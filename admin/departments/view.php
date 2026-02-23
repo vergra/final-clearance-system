@@ -78,7 +78,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <?php else: ?>
     <div class="row g-3">
         <?php foreach ($strands as $strand): ?>
-            <div class="col-md-6 col-lg-4">
+            <div class="col-6 col-md-6 col-lg-4">
                 <a href="view_strand.php?id=<?php echo $strand['strand_id']; ?>" class="text-decoration-none">
                     <div class="card h-100 border-primary admin-dashboard-card">
                         <div class="card-body">
