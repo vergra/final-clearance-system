@@ -1,5 +1,6 @@
--- Add strands table for proper strand management
--- Run this after the main schema to add strand support
+-- MIGRATION: Add strands table for existing databases
+-- ONLY run this if you have an existing database without the strands table
+-- For new installations, use schema.sql instead (includes everything)
 
 USE student_clearance;
 

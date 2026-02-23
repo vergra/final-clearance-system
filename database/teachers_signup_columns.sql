@@ -1,6 +1,8 @@
--- Add middle_name and subject_id to teachers for teacher sign-up (run if you already have the DB)
-USE student_clearance;
-
-ALTER TABLE teachers ADD COLUMN middle_name VARCHAR(50) DEFAULT NULL AFTER given_name;
-ALTER TABLE teachers ADD COLUMN subject_id INT DEFAULT NULL AFTER department_id;
-ALTER TABLE teachers ADD FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE SET NULL;
+-- DEPRECATED: This file is no longer needed
+-- All teacher columns including middle_name and subject_id are now included in schema.sql
+-- Use schema.sql for new installations
+-- For existing databases missing these columns, run:
+--
+-- ALTER TABLE teachers ADD COLUMN middle_name VARCHAR(50) DEFAULT NULL AFTER given_name;
+-- ALTER TABLE teachers ADD COLUMN subject_id INT DEFAULT NULL AFTER department_id;
+-- ALTER TABLE teachers ADD FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE SET NULL;

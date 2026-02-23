@@ -1,6 +1,22 @@
 -- Gradline: Senior High School Clearance - Database Schema
 -- Import this file into your empty database "student_clearance" in phpMyAdmin.
 -- Creates all tables from the ERD design; safe to re-run (drops tables first).
+--
+-- RECENT UPDATES INCLUDED:
+-- 1. Added strands table for proper strand management (strands can exist without subjects)
+-- 2. Updated subjects table to include strand_id foreign key
+-- 3. Added department and strand text fields to teachers table for flexibility
+-- 4. Removed hardcoded departments - now managed via admin interface
+-- 5. Updated foreign key constraints for better data integrity
+--
+-- HARDCODED LOGIN ACCOUNTS (in includes/auth.php):
+-- - Admin: username 'admin', password 'admin123'
+-- - Teacher: username 'teacher@sample.com', password 'teacher'
+-- - Student: username 'student@sample.com', password 'student'
+--
+-- NAVIGATION STRUCTURE:
+-- - Departments → Strands → Subjects (hierarchical management)
+-- - Subjects dropdown removed from admin navigation (accessed via departments)
 
 USE student_clearance;
 
@@ -15,6 +31,7 @@ DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS teachers;
 DROP TABLE IF EXISTS subjects;
+DROP TABLE IF EXISTS strands;
 DROP TABLE IF EXISTS blocks;
 DROP TABLE IF EXISTS departments;
 DROP TABLE IF EXISTS school_year;
@@ -66,6 +83,8 @@ CREATE TABLE teachers (
     given_name VARCHAR(50) NOT NULL,
     department_id INT NOT NULL,
     subject_id INT DEFAULT NULL,
+    department VARCHAR(100) DEFAULT NULL COMMENT 'Text field for department name',
+    strand VARCHAR(50) DEFAULT NULL COMMENT 'Text field for strand name',
     FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE RESTRICT,
     FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
