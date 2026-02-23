@@ -1,8 +1,0 @@
--- DEPRECATED: This file is no longer needed
--- All teacher text fields are now included in schema.sql
--- Use schema.sql for new installations
--- For existing databases missing these text fields, run:
---
--- ALTER TABLE teachers ADD COLUMN department VARCHAR(100) DEFAULT NULL AFTER department_id;
--- ALTER TABLE teachers ADD COLUMN strand VARCHAR(50) DEFAULT NULL AFTER subject_id;
--- ALTER TABLE teachers MODIFY COLUMN department_id INT DEFAULT NULL;
