@@ -25,21 +25,42 @@ $error = '';
 $subject_name = $row['subject_name'];
 $strand = $row['strand'];
 $department_id = (int)$row['department_id'];
+$strand_id = $row['strand_id'] ?? null;
+$returnTo = $_GET['returnTo'] ?? ''; // Initialize returnTo parameter
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject_name = trim($_POST['subject_name'] ?? '');
     $strand = trim($_POST['strand'] ?? '');
     $department_id = (int)($_POST['department_id'] ?? 0);
+    $strand_id = (int)($_POST['strand_id'] ?? 0);
+    
     if ($subject_name === '' || $strand === '') {
         $error = 'Subject name and strand are required.';
     } elseif (!$department_id) {
         $error = 'Please select a department.';
     } else {
         try {
-            $stmt = $pdo->prepare("UPDATE subjects SET subject_name = ?, strand = ?, department_id = ? WHERE subject_id = ?");
-            $stmt->execute([$subject_name, $strand, $department_id, $id]);
-            $returnUrl = $returnTo === 'departments' ? '../departments/index.php?updated=1' : 'index.php?updated=1';
-            header('Location: ' . $returnUrl);
+            // Get strand_id if not provided
+            if (!$strand_id) {
+                $stmt = $pdo->prepare("SELECT strand_id FROM strands WHERE strand_name = ? AND department_id = ?");
+                $stmt->execute([$strand, $department_id]);
+                $strandRow = $stmt->fetch();
+                if ($strandRow) {
+                    $strand_id = $strandRow['strand_id'];
+                }
+            }
+            
+            $stmt = $pdo->prepare("UPDATE subjects SET subject_name = ?, strand = ?, strand_id = ?, department_id = ? WHERE subject_id = ?");
+            $stmt->execute([$subject_name, $strand, $strand_id ?: null, $department_id, $id]);
+            
+            // Determine redirect based on where we came from
+            if ($strand_id) {
+                header('Location: ../departments/view_strand.php?id=' . $strand_id . '&subject_updated=1');
+            } elseif ($returnTo === 'departments') {
+                header('Location: ../departments/index.php?updated=1');
+            } else {
+                header('Location: index.php?updated=1');
+            }
             exit;
         } catch (PDOException $e) {
             $error = 'Failed to save.';
@@ -52,7 +73,9 @@ require_once __DIR__ . '/../../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h2 mb-0">Edit Subject</h1>
-    <?php if ($returnTo === 'departments'): ?>
+    <?php if ($strand_id): ?>
+        <a href="../departments/view_strand.php?id=<?php echo $strand_id; ?>" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back to Strand</a>
+    <?php elseif ($returnTo === 'departments'): ?>
         <a href="../departments/index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
     <?php else: ?>
         <a href="index.php" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Back</a>
@@ -72,6 +95,9 @@ require_once __DIR__ . '/../../includes/header.php';
             <div class="mb-3">
                 <label for="strand" class="form-label">Strand</label>
                 <input type="text" class="form-control" id="strand" name="strand" value="<?php echo htmlspecialchars($strand); ?>" required>
+                <?php if ($strand_id): ?>
+                    <input type="hidden" name="strand_id" value="<?php echo $strand_id; ?>">
+                <?php endif; ?>
             </div>
             <div class="mb-3">
                 <label for="department_id" class="form-label">Department</label>
@@ -82,7 +108,9 @@ require_once __DIR__ . '/../../includes/header.php';
                 </select>
             </div>
             <button type="submit" class="btn btn-primary">Update</button>
-            <?php if ($returnTo === 'departments'): ?>
+            <?php if ($strand_id): ?>
+                <a href="../departments/view_strand.php?id=<?php echo $strand_id; ?>" class="btn btn-link"><i class="bi bi-arrow-left me-1"></i>Back to Strand</a>
+            <?php elseif ($returnTo === 'departments'): ?>
                 <a href="../departments/index.php" class="btn btn-link"><i class="bi bi-arrow-left me-1"></i>Back</a>
             <?php else: ?>
                 <a href="index.php" class="btn btn-link"><i class="bi bi-arrow-left me-1"></i>Back</a>

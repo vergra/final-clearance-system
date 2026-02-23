@@ -30,12 +30,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Strand name is required.';
     } else {
         try {
+            // Insert strand into strands table
             $stmt = $pdo->prepare("INSERT INTO strands (strand_name, department_id) VALUES (?, ?)");
             $stmt->execute([$strand_name, $department_id]);
-            header('Location: view.php?id=' . $department_id . '&strand_created=1');
+            $strand_id = $pdo->lastInsertId();
+            header('Location: view_strand.php?id=' . $strand_id . '&strand_created=1');
             exit;
         } catch (PDOException $e) {
-            $error = 'Failed to save strand.';
+            if ($e->getCode() == 23000) { // Duplicate entry
+                $error = 'This strand already exists in this department.';
+            } else {
+                $error = 'Failed to save strand. Error: ' . $e->getMessage();
+            }
         }
     }
 }

@@ -23,8 +23,8 @@ if (!$department) {
 
 // Get strands for this department with subject count
 $stmt = $pdo->prepare("
-    SELECT s.*, 
-           (SELECT COUNT(*) FROM subjects WHERE department_id = s.department_id AND strand = s.strand_name) as subject_count
+    SELECT s.strand_id, s.strand_name,
+           (SELECT COUNT(*) FROM subjects WHERE strand_id = s.strand_id) as subject_count
     FROM strands s
     WHERE s.department_id = ?
     ORDER BY s.strand_name

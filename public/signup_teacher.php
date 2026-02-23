@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $departments = $pdo->query("SELECT department_id, department_name FROM departments ORDER BY department_name")->fetchAll();
     $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand, department_id FROM subjects ORDER BY subject_name")->fetchAll();
-    $strandsData = $pdo->query("SELECT strand_name, department_id FROM strands ORDER BY strand_name")->fetchAll();
+    $strandsData = $pdo->query("SELECT DISTINCT strand as strand_name, department_id FROM subjects ORDER BY strand")->fetchAll();
 } catch (PDOException $e) {
     $departments = [];
     $subjectsData = [];

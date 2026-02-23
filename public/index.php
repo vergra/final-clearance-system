@@ -152,7 +152,6 @@ require_once __DIR__ . '/../includes/header.php';
                         <span class="badge bg-primary rounded-pill"><?php echo $counts['departments']; ?></span>
                     </div>
                     <h5 class="card-title mt-2">Departments</h5>
-                    <p class="card-text small text-muted mb-0">Registrar, Accounting, Library, etc.</p>
                 </div>
             </div>
         </a>

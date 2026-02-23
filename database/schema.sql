@@ -37,13 +37,25 @@ CREATE TABLE blocks (
     block_name VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Subjects (FK: department_id)
+-- 4. Subjects (FK: department_id, strand_id)
 CREATE TABLE subjects (
     subject_id INT AUTO_INCREMENT PRIMARY KEY,
     subject_name VARCHAR(100) NOT NULL,
     strand VARCHAR(50) NOT NULL,
+    strand_id INT DEFAULT NULL,
     department_id INT NOT NULL,
-    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE RESTRICT
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE RESTRICT,
+    FOREIGN KEY (strand_id) REFERENCES strands(strand_id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 4b. Strands (FK: department_id)
+CREATE TABLE strands (
+    strand_id INT AUTO_INCREMENT PRIMARY KEY,
+    strand_name VARCHAR(50) NOT NULL,
+    department_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_strand_per_dept (strand_name, department_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 5. Teachers (FK: department_id, subject_id for subject handle)
@@ -156,9 +168,9 @@ CREATE TABLE students_clearance_status (
 
 -- Sample data (optional - remove in production)
 INSERT INTO school_year (year_label) VALUES ('2024-2025'), ('2025-2026');
-INSERT INTO departments (department_name) VALUES ('Registrar'), ('Accounting'), ('Library'), ('Guidance');
+-- Departments should be added via the admin interface, not hardcoded
 INSERT INTO blocks (block_code, block_name) VALUES ('11-A', 'Grade 11 Section A'), ('11-B', 'Grade 11 Section B'), ('12-A', 'Grade 12 Section A');
-INSERT INTO requirements (requirement_name, department_id) VALUES ('Registrar Clearance', 1), ('Accounting Dues', 2), ('Library Fines', 3), ('Guidance Interview', 4);
+-- Requirements should be added after departments are created
 -- Default admin user: username 'admin', password 'password' (change in production)
 INSERT INTO users (username, password_hash, role, reference_id) VALUES
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL);
