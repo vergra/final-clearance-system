@@ -46,7 +46,6 @@ $currentUser = getCurrentUser();
                                     <li><a class="dropdown-item" href="<?php echo $base; ?>/admin/departments/index.php">Departments</a></li>
                                     <li><a class="dropdown-item" href="<?php echo $base; ?>/admin/blocks/index.php">Blocks</a></li>
                                     <li><a class="dropdown-item" href="<?php echo $base; ?>/admin/teachers/index.php">Teachers</a></li>
-                                    <li><a class="dropdown-item" href="<?php echo $base; ?>/admin/subjects/index.php">Subjects</a></li>
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="<?php echo $base; ?>/admin/users/index.php">User accounts</a></li>
                                 </ul>

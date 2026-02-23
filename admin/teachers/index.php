@@ -6,13 +6,29 @@ require_once __DIR__ . '/../../includes/auth.php';
 requireRole('admin');
 $pdo = getDB();
 
-$stmt = $pdo->query("
-    SELECT t.teacher_id, t.surname, t.middle_name, t.given_name, t.department_id, t.subject_id, t.department AS department_text, t.strand AS strand_text, d.department_name, s.subject_name
-    FROM teachers t
-    LEFT JOIN departments d ON d.department_id = t.department_id
-    LEFT JOIN subjects s ON s.subject_id = t.subject_id
-    ORDER BY t.surname, t.given_name
-");
+// Try to get teachers with text fields first, fallback to basic query
+try {
+    $stmt = $pdo->query("
+        SELECT t.teacher_id, t.surname, t.middle_name, t.given_name, t.department_id, t.subject_id, 
+               t.department AS department_text, t.strand AS strand_text, 
+               d.department_name, s.subject_name
+        FROM teachers t
+        LEFT JOIN departments d ON d.department_id = t.department_id
+        LEFT JOIN subjects s ON s.subject_id = t.subject_id
+        ORDER BY t.surname, t.given_name
+    ");
+} catch (PDOException $e) {
+    // Fallback query if text columns don't exist
+    $stmt = $pdo->query("
+        SELECT t.teacher_id, t.surname, t.middle_name, t.given_name, t.department_id, t.subject_id, 
+               NULL AS department_text, NULL AS strand_text,
+               d.department_name, s.subject_name
+        FROM teachers t
+        LEFT JOIN departments d ON d.department_id = t.department_id
+        LEFT JOIN subjects s ON s.subject_id = t.subject_id
+        ORDER BY t.surname, t.given_name
+    ");
+}
 $rows = $stmt->fetchAll();
 
 require_once __DIR__ . '/../../includes/header.php';
