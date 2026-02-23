@@ -35,6 +35,26 @@ function getCurrentUser() {
             'created_at' => null
         ];
     }
+    // Handle hardcoded teacher account (user_id = -1)
+    if ($_SESSION['user_id'] == -1 && isset($_SESSION['role']) && $_SESSION['role'] === 'teacher') {
+        return [
+            'user_id' => -1,
+            'username' => $_SESSION['username'] ?? 'teacher@sample.com',
+            'role' => 'teacher',
+            'reference_id' => null,
+            'created_at' => null
+        ];
+    }
+    // Handle hardcoded student account (user_id = -2)
+    if ($_SESSION['user_id'] == -2 && isset($_SESSION['role']) && $_SESSION['role'] === 'student') {
+        return [
+            'user_id' => -2,
+            'username' => $_SESSION['username'] ?? 'student@sample.com',
+            'role' => 'student',
+            'reference_id' => null,
+            'created_at' => null
+        ];
+    }
     $pdo = getDB();
     $stmt = $pdo->prepare('SELECT user_id, username, role, reference_id, created_at FROM users WHERE user_id = ?');
     $stmt->execute([$_SESSION['user_id']]);
@@ -81,6 +101,14 @@ function attemptLogin($username, $password, $requiredRole = null) {
     $hardcodedAdminUsername = 'admin';
     $hardcodedAdminPassword = 'admin123'; // Change this to your desired permanent admin password
     
+    // Hardcoded teacher account
+    $hardcodedTeacherUsername = 'teacher@sample.com';
+    $hardcodedTeacherPassword = 'teacher';
+    
+    // Hardcoded student account
+    $hardcodedStudentUsername = 'student@sample.com';
+    $hardcodedStudentPassword = 'student';
+    
     // Check hardcoded admin credentials first
     if ($username === $hardcodedAdminUsername && $password === $hardcodedAdminPassword) {
         // If required role is set and it's not admin, return the role mismatch
@@ -91,6 +119,34 @@ function attemptLogin($username, $password, $requiredRole = null) {
         $_SESSION['user_id'] = 0;
         $_SESSION['username'] = $hardcodedAdminUsername;
         $_SESSION['role'] = 'admin';
+        $_SESSION['reference_id'] = null;
+        return true;
+    }
+    
+    // Check hardcoded teacher credentials
+    if ($username === $hardcodedTeacherUsername && $password === $hardcodedTeacherPassword) {
+        // If required role is set and it's not teacher, return the role mismatch
+        if ($requiredRole !== null && $requiredRole !== 'teacher') {
+            return 'teacher';
+        }
+        // Set session for hardcoded teacher (use special user_id -1 to indicate hardcoded)
+        $_SESSION['user_id'] = -1;
+        $_SESSION['username'] = $hardcodedTeacherUsername;
+        $_SESSION['role'] = 'teacher';
+        $_SESSION['reference_id'] = null;
+        return true;
+    }
+    
+    // Check hardcoded student credentials
+    if ($username === $hardcodedStudentUsername && $password === $hardcodedStudentPassword) {
+        // If required role is set and it's not student, return the role mismatch
+        if ($requiredRole !== null && $requiredRole !== 'student') {
+            return 'student';
+        }
+        // Set session for hardcoded student (use special user_id -2 to indicate hardcoded)
+        $_SESSION['user_id'] = -2;
+        $_SESSION['username'] = $hardcodedStudentUsername;
+        $_SESSION['role'] = 'student';
         $_SESSION['reference_id'] = null;
         return true;
     }
