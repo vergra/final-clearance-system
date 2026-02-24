@@ -283,7 +283,6 @@ require_once __DIR__ . '/../includes/header.php';
     flex-direction: column;
     justify-content: space-between;
     padding: 12px;
-    border: 1px solid #333;
     font-size: 12px;
     min-height: 90px;
 }
@@ -355,7 +354,6 @@ require_once __DIR__ . '/../includes/header.php';
 }
 
 .bond-paper .remarks-box {
-    border: 1px solid #333;
     padding: 15px;
     min-height: 80px;
 }
