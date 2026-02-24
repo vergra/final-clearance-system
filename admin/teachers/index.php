@@ -41,6 +41,7 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
     <div>
         <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Dashboard</a>
+        <a href="subject_assignments.php" class="btn btn-success me-2"><i class="bi bi-book me-1"></i> Subject Assignments</a>
         <a href="create.php" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Teacher</a>
     </div>
 </div>

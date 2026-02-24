@@ -26,7 +26,7 @@ $error = '';
 $success = false;
 $surname = $middle_name = $given_name = $department = $strand = $email = '';
 $department_id = 0;
-$subject_id = 0;
+$selected_subjects = [];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $surname = trim($_POST['surname'] ?? '');
@@ -34,13 +34,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $given_name = trim($_POST['given_name'] ?? '');
     $department_id = (int)($_POST['department_id'] ?? 0);
     $strand = trim($_POST['strand'] ?? '');
-    $subject_id = (int)($_POST['subject_id'] ?? 0);
+    $selected_subjects = $_POST['subjects'] ?? [];
+    if (!is_array($selected_subjects)) {
+        $selected_subjects = [];
+    }
+    $selected_subjects = array_values(array_filter(array_map('intval', $selected_subjects), function ($v) {
+        return $v > 0;
+    }));
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
 
-    if ($surname === '' || $given_name === '' || !$department_id || $email === '' || $password === '') {
-        $error = 'Please fill in all required fields (Surname, Given name, Department, University email, Password).';
+    if ($surname === '' || $given_name === '' || !$department_id || empty($selected_subjects) || $email === '' || $password === '') {
+        $error = 'Please fill in all required fields (Surname, Given name, Department, Subjects, University email, Password).';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid university email address.';
     } elseif (strlen($password) < 6) {
@@ -63,21 +69,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
                 
-                // Try to insert with text fields first, fallback to basic insert
+                $primary_subject_id = $selected_subjects[0] ?? null;
+
+                // Insert teacher record
                 try {
                     $ins = $pdo->prepare('INSERT INTO teachers (surname, middle_name, given_name, department_id, subject_id, department, strand) VALUES (?, ?, ?, ?, ?, ?, ?)');
-                    $ins->execute([$surname, $middle_name !== '' ? $middle_name : null, $given_name, $department_id, $subject_id > 0 ? $subject_id : null, $deptName, $strand !== '' ? $strand : null]);
+                    $ins->execute([
+                        $surname,
+                        $middle_name !== '' ? $middle_name : null,
+                        $given_name,
+                        $department_id,
+                        $primary_subject_id,
+                        $deptName,
+                        $strand !== '' ? $strand : null
+                    ]);
                 } catch (PDOException $e) {
                     // If text columns don't exist, use basic insert
                     if (strpos($e->getMessage(), 'Unknown column') !== false) {
                         $ins = $pdo->prepare('INSERT INTO teachers (surname, middle_name, given_name, department_id, subject_id) VALUES (?, ?, ?, ?, ?)');
-                        $ins->execute([$surname, $middle_name !== '' ? $middle_name : null, $given_name, $department_id, $subject_id > 0 ? $subject_id : null]);
+                        $ins->execute([
+                            $surname,
+                            $middle_name !== '' ? $middle_name : null,
+                            $given_name,
+                            $department_id,
+                            $primary_subject_id
+                        ]);
                     } else {
                         throw $e;
                     }
                 }
                 
                 $teacher_id = (int) $pdo->lastInsertId();
+                
+                // Create teacher-subject assignments for current school year
+                $currentSchoolYearStmt = $pdo->query("SELECT school_year_id FROM school_year ORDER BY year_label DESC LIMIT 1");
+                $currentSchoolYear = $currentSchoolYearStmt->fetch();
+                
+                if ($currentSchoolYear) {
+                    $teacherSubjectStmt = $pdo->prepare('INSERT INTO teacher_subject (teacher_id, subject_id, school_year_id) VALUES (?, ?, ?)');
+                    foreach ($selected_subjects as $subject_id) {
+                        $teacherSubjectStmt->execute([$teacher_id, $subject_id, $currentSchoolYear['school_year_id']]);
+                    }
+                }
+                
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 $userIns = $pdo->prepare('INSERT INTO users (username, password_hash, role, reference_id) VALUES (?, ?, ?, ?)');
                 $userIns->execute([$email, $hash, 'teacher', (string) $teacher_id]);
@@ -144,7 +178,7 @@ $base = rtrim(WEB_BASE, '/');
                                 <strong>Account created.</strong> You can now log in with your university email and password.
                             </div>
                             <div class="d-grid gap-2 d-md-flex justify-content-center">
-                                <a href="<?php echo $base; ?>/public/login.php?as=teacher&username=<?php echo urlencode($email); ?>&next=dashboard" class="btn btn-success">Proceed to Dashboard</a>
+                                <a href="<?php echo $base; ?>/public/index.php" class="btn btn-success">Proceed to Home</a>
                                 <a href="<?php echo $base; ?>/public/login.php?as=teacher&username=<?php echo urlencode($email); ?>" class="btn btn-outline-secondary">Back to Login</a>
                             </div>
                         <?php else: ?>
@@ -190,10 +224,11 @@ $base = rtrim(WEB_BASE, '/');
                                     </select>
                                 </div>
                                 <div class="mt-2">
-                                    <label for="subject_id" class="form-label">Subject</label>
-                                    <select class="form-select" id="subject_id" name="subject_id" autocomplete="job-title">
+                                    <label for="subjects" class="form-label">Subjects <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="subjects" name="subjects[]" autocomplete="job-title" multiple required>
                                         <option value="">— Select strand first —</option>
                                     </select>
+                                    <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple subjects</small>
                                 </div>
                                 <hr class="my-3">
                                 <div class="mb-2">
@@ -246,7 +281,7 @@ $base = rtrim(WEB_BASE, '/');
         
         var departmentSelect = document.getElementById('department_id');
         var strandSelect = document.getElementById('strand');
-        var subjectSelect = document.getElementById('subject_id');
+        var subjectSelect = document.getElementById('subjects');
 
         // Safety check
         if (!departmentSelect || !strandSelect || !subjectSelect) {

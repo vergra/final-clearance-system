@@ -12,12 +12,13 @@ if (!$subject_id) {
 
 $pdo = getDB();
 $stmt = $pdo->prepare("
-    SELECT t.teacher_id, t.surname, t.given_name 
+    SELECT DISTINCT t.teacher_id, t.surname, t.given_name 
     FROM teachers t 
-    WHERE t.subject_id = ? OR t.department_id = (SELECT department_id FROM subjects WHERE subject_id = ?)
+    JOIN teacher_subject ts ON ts.teacher_id = t.teacher_id
+    WHERE ts.subject_id = ? AND ts.school_year_id = (SELECT school_year_id FROM school_year ORDER BY year_label DESC LIMIT 1)
     ORDER BY t.surname, t.given_name
 ");
-$stmt->execute([$subject_id, $subject_id]);
+$stmt->execute([$subject_id]);
 $teachers = $stmt->fetchAll();
 
 header('Content-Type: application/json');
