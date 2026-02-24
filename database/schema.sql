@@ -54,7 +54,17 @@ CREATE TABLE blocks (
     block_name VARCHAR(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- 4. Subjects (FK: department_id, strand_id)
+-- 4. Strands (FK: department_id)
+CREATE TABLE strands (
+    strand_id INT AUTO_INCREMENT PRIMARY KEY,
+    strand_name VARCHAR(50) NOT NULL,
+    department_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_strand_per_dept (strand_name, department_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 5. Subjects (FK: department_id, strand_id)
 CREATE TABLE subjects (
     subject_id INT AUTO_INCREMENT PRIMARY KEY,
     subject_name VARCHAR(100) NOT NULL,
@@ -63,16 +73,6 @@ CREATE TABLE subjects (
     department_id INT NOT NULL,
     FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE RESTRICT,
     FOREIGN KEY (strand_id) REFERENCES strands(strand_id) ON DELETE SET NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-
--- 4b. Strands (FK: department_id)
-CREATE TABLE strands (
-    strand_id INT AUTO_INCREMENT PRIMARY KEY,
-    strand_name VARCHAR(50) NOT NULL,
-    department_id INT NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE,
-    UNIQUE KEY unique_strand_per_dept (strand_name, department_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 5. Teachers (FK: department_id, subject_id for subject handle)
@@ -156,6 +156,7 @@ CREATE TABLE clearance_status (
     lrn VARCHAR(20) NOT NULL,
     requirement_id INT NOT NULL,
     teacher_id INT NOT NULL,
+    subject_id INT NOT NULL,
     school_year_id INT NOT NULL,
     status ENUM('Pending', 'Approved', 'Declined') DEFAULT 'Pending',
     date_submitted DATE DEFAULT NULL,
@@ -164,6 +165,7 @@ CREATE TABLE clearance_status (
     FOREIGN KEY (lrn) REFERENCES students(lrn) ON DELETE CASCADE,
     FOREIGN KEY (requirement_id) REFERENCES requirements(requirement_id) ON DELETE CASCADE,
     FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE RESTRICT,
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE RESTRICT,
     FOREIGN KEY (school_year_id) REFERENCES school_year(school_year_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
@@ -185,11 +187,6 @@ CREATE TABLE students_clearance_status (
     FOREIGN KEY (clearance_id) REFERENCES clearance_status(clearance_id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Sample data (optional - remove in production)
-INSERT INTO school_year (year_label) VALUES ('2024-2025'), ('2025-2026');
--- Departments should be added via the admin interface, not hardcoded
-INSERT INTO blocks (block_code, block_name) VALUES ('11-A', 'Grade 11 Section A'), ('11-B', 'Grade 11 Section B'), ('12-A', 'Grade 12 Section A');
--- Requirements should be added after departments are created
 -- Default admin user: username 'admin', password 'password' (change in production)
 INSERT INTO users (username, password_hash, role, reference_id) VALUES
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL);

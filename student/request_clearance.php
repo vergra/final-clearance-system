@@ -138,6 +138,98 @@ require_once __DIR__ . '/../includes/header.php';
     background: #f9f9f9;
 }
 
+.bond-paper .subjects-section {
+    margin-bottom: 25px;
+}
+
+.bond-paper .subjects-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    min-height: 100px;
+}
+
+.bond-paper .subject-item {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 12px;
+    border: 1px solid #333;
+    font-size: 12px;
+    min-height: 90px;
+}
+
+.bond-paper .subject-item:last-child {
+    border-bottom: none;
+}
+
+.bond-paper .subject-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    flex: 1;
+}
+
+.bond-paper .subject-name {
+    font-weight: bold;
+    min-width: unset;
+}
+
+.bond-paper .teacher-name {
+    color: #333;
+    font-weight: 600;
+    min-width: unset;
+}
+
+.bond-paper .status-badge {
+    margin-top: 4px;
+}
+
+.bond-paper .status-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 10px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.bond-paper .status-pending {
+    background: #ffc107;
+    color: #000;
+}
+
+.bond-paper .status-cleared {
+    background: #28a745;
+    color: white;
+}
+
+.bond-paper .status-not-cleared {
+    background: #dc3545;
+    color: white;
+}
+
+.bond-paper .subject-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.bond-paper .remove-subject {
+    background: #dc3545;
+    color: white;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.bond-paper .remove-subject:hover {
+    background: #c82333;
+}
+
 .bond-paper .clearance-section {
     margin-bottom: 25px;
 }
@@ -270,6 +362,72 @@ require_once __DIR__ . '/../includes/header.php';
         grid-template-columns: 1fr;
         gap: 15px;
     }
+
+    .bond-paper .subjects-list {
+        grid-template-columns: 1fr;
+    }
+}
+
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+}
+
+.remove-buttons-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 8px;
+}
+
+.remove-buttons-list .btn {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.teacher-section {
+    margin-bottom: 8px;
+}
+
+.teacher-divider {
+    height: 1px;
+    background: #666;
+    margin: 4px 0;
+    width: 100%;
+}
+
+.bond-paper .subject-info {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center !important;
+    justify-content: center;
+    gap: 2px;
+    flex: 1;
+}
+
+.teacher-name {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #333;
+    text-align: center;
+    display: block;
+}
+
+.subject-name {
+    font-size: 0.85rem;
+    color: #555;
+    display: block;
+    margin-top: 4px;
+    text-align: center;
+}
+
+.status-badge {
+    display: block;
+    margin: 8px auto 0;
+    text-align: center;
 }
 </style>
 
@@ -356,7 +514,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <div class="mb-3">
                     <label>&nbsp;</label>
                     <div>
-                        <button type="button" class="btn btn-primary" id="generateForm">Generate Clearance Form</button>
+                        <button type="button" class="btn btn-primary" id="generateForm">Add Subject & Teacher</button>
                     </div>
                 </div>
             </div>
@@ -393,20 +551,17 @@ require_once __DIR__ . '/../includes/header.php';
                     <span id="displayStrand"></span>
                 </div>
             </div>
-            <div class="details-row">
-                <div class="detail-item">
-                    <label>Subject:</label>
-                    <span id="displaySubject"></span>
-                </div>
-                <div class="detail-item">
-                    <label>Teacher:</label>
-                    <span id="displayTeacher"></span>
-                </div>
-            </div>
         </div>
         
-        <div class="clearance-section">
-            <div class="requirements-table" id="requirementsList"></div>
+        <div class="subjects-section">
+            <div class="section-title">SUBJECTS AND TEACHERS</div>
+            <div id="subjectsList" class="subjects-list"></div>
+            <div class="button-group">
+                <button type="button" class="btn btn-outline-primary btn-sm mt-2" id="addSubjectBtn">
+                    <i class="bi bi-plus-circle me-1"></i> Add Subject & Teacher
+                </button>
+                <div id="removeSubjectButtonsList" class="remove-buttons-list"></div>
+            </div>
         </div>
         
         <div class="remarks-section">
@@ -476,6 +631,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     let requirements = [];
+    let selectedSubjects = []; // Store selected subject-teacher pairs
     
     departmentSelect.addEventListener('change', function() {
         const deptId = this.value;
@@ -550,16 +706,194 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Direct clearance request - no requirements needed
-        displayBondPaper();
+        // Add subject-teacher pair to the list
+        const subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
+        const teacherText = teacherSelect.options[teacherSelect.selectedIndex].text;
+        
+        // Check if already added
+        const exists = selectedSubjects.find(s => s.subject_id == subjectSelect.value && s.teacher_id == teacherSelect.value);
+        if (exists) {
+            alert('This subject-teacher combination is already added');
+            return;
+        }
+        
+        selectedSubjects.push({
+            subject_id: subjectSelect.value,
+            teacher_id: teacherSelect.value,
+            subject_name: subjectText,
+            teacher_name: teacherText
+        });
+        
+        updateSubjectsList();
+        
+        // Reset the selection fields for next entry
+        subjectSelect.value = '';
+        teacherSelect.value = '';
+        teacherSelect.disabled = true;
+        
+        // Show the form if first subject added
+        if (selectedSubjects.length === 1) {
+            displayBondPaper();
+        }
     });
+    
+    function updateSubjectsList() {
+        const subjectsList = document.getElementById('subjectsList');
+        const removeButtonsList = document.getElementById('removeSubjectButtonsList');
+        subjectsList.innerHTML = '';
+        removeButtonsList.innerHTML = '';
+        
+        selectedSubjects.forEach((subject, index) => {
+            const item = document.createElement('div');
+            item.className = 'subject-item';
+            item.innerHTML = `
+                <div class="subject-info">
+                    <div class="teacher-section">
+                        <span class="teacher-name">${subject.teacher_name}</span>
+                        <div class="teacher-divider"></div>
+                    </div>
+                    <span class="subject-name">${subject.subject_name}</span>
+                    <span class="status-badge status-pending">Pending</span>
+                </div>
+            `;
+            subjectsList.appendChild(item);
+            
+            // Add remove button in the separate area
+            const removeBtn = document.createElement('button');
+            removeBtn.type = 'button';
+            removeBtn.className = 'btn btn-outline-danger btn-sm ms-2';
+            removeBtn.innerHTML = `<i class="bi bi-trash me-1"></i> ${subject.subject_name}`;
+            removeBtn.onclick = () => removeSubject(index);
+            removeButtonsList.appendChild(removeBtn);
+        });
+    }
+    
+    function removeSubject(index) {
+        selectedSubjects.splice(index, 1);
+        updateSubjectsList();
+        
+        // Hide form if no subjects left
+        if (selectedSubjects.length === 0) {
+            bondPaperContainer.style.display = 'none';
+        }
+    }
+    
+    function viewRequirements(index) {
+        const subject = selectedSubjects[index];
+        
+        // Create modal HTML
+        const modalHtml = `
+            <div class="modal fade" id="requirementsModal" tabindex="-1">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Requirements for ${subject.subject_name}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <strong>Teacher:</strong> ${subject.teacher_name}
+                            </div>
+                            <div class="mb-3">
+                                <strong>Status:</strong> <span class="badge bg-warning">Pending</span>
+                            </div>
+                            <h6>Clearance Requirements:</h6>
+                            <div id="requirementsList_${index}" class="requirements-checklist">
+                                <div class="text-center">
+                                    <div class="spinner-border" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2">Loading requirements...</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Remove existing modal if any
+        const existingModal = document.getElementById('requirementsModal');
+        if (existingModal) {
+            existingModal.remove();
+        }
+        
+        // Add modal to body
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('requirementsModal'));
+        modal.show();
+        
+        // Load requirements
+        loadRequirements(index, subject.subject_id, subject.teacher_id);
+    }
+    
+    function loadRequirements(index, subjectId, teacherId) {
+        fetch(`get_subject_requirements.php?subject_id=${subjectId}&teacher_id=${teacherId}`)
+            .then(response => response.json())
+            .then(data => {
+                const requirementsList = document.getElementById(`requirementsList_${index}`);
+                
+                if (data.error) {
+                    requirementsList.innerHTML = `
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            ${data.error}
+                        </div>
+                    `;
+                    return;
+                }
+                
+                if (data.length === 0) {
+                    requirementsList.innerHTML = `
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            No specific requirements listed for this subject. 
+                            Please contact the teacher for more information.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                let requirementsHtml = '<div class="list-group">';
+                data.forEach(req => {
+                    requirementsHtml += `
+                        <div class="list-group-item">
+                            <div class="d-flex align-items-center">
+                                <input class="form-check-input me-3" type="checkbox" disabled>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">${req.requirement_name}</h6>
+                                    ${req.description ? `<small class="text-muted">${req.description}</small>` : ''}
+                                </div>
+                                <span class="badge bg-secondary">Pending</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                requirementsHtml += '</div>';
+                
+                requirementsList.innerHTML = requirementsHtml;
+            })
+            .catch(error => {
+                console.error('Error loading requirements:', error);
+                const requirementsList = document.getElementById(`requirementsList_${index}`);
+                requirementsList.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-circle me-2"></i>
+                        Error loading requirements. Please try again.
+                    </div>
+                `;
+            });
+    }
     
     function displayBondPaper() {
         console.log('Displaying bond paper...');
         const deptText = departmentSelect.options[departmentSelect.selectedIndex].text;
         const strandText = strandSelect.options[strandSelect.selectedIndex].text;
-        const subjectText = subjectSelect.options[subjectSelect.selectedIndex].text;
-        const teacherText = teacherSelect.options[teacherSelect.selectedIndex].text;
         const schoolYearText = document.getElementById('school_year_id').options[document.getElementById('school_year_id').selectedIndex].text;
         
         console.log('Setting form values...');
@@ -584,54 +918,41 @@ document.addEventListener('DOMContentLoaded', function() {
         const displayStrandElement = document.getElementById('displayStrand');
         if (displayStrandElement) displayStrandElement.textContent = strandText;
         
-        const displaySubjectElement = document.getElementById('displaySubject');
-        if (displaySubjectElement) displaySubjectElement.textContent = subjectText;
-        
-        const displayTeacherElement = document.getElementById('displayTeacher');
-        if (displayTeacherElement) displayTeacherElement.textContent = teacherText;
-        
-        // Clear requirements section and show simple request message
-        const requirementsList = document.getElementById('requirementsList');
-        if (requirementsList) {
-            requirementsList.innerHTML = `
-                <div class="requirement-item">
-                    <div style="flex: 1; text-align: center; padding: 20px;">
-                        <h4>Clearance Request for ${subjectText}</h4>
-                        <p>Student is requesting clearance from ${teacherText}</p>
-                        <p style="font-size: 12px; color: #666; margin-top: 10px;">
-                            The teacher will review this request and provide feedback on the student's completion status.
-                        </p>
-                    </div>
-                </div>
-            `;
-        }
-        
         console.log('Showing bond paper container...');
         bondPaperContainer.style.display = 'block';
         bondPaperContainer.scrollIntoView({ behavior: 'smooth' });
     }
     
     document.getElementById('submitRequests').addEventListener('click', function() {
-        if (!confirm('Submit clearance request to ' + teacherSelect.options[teacherSelect.selectedIndex].text + '?')) {
+        if (selectedSubjects.length === 0) {
+            alert('Please add at least one subject and teacher');
             return;
         }
         
-        // Create a simple clearance request
+        if (!confirm(`Submit ${selectedSubjects.length} clearance request(s)?`)) {
+            return;
+        }
+        
+        // Create clearance requests for all selected subjects
         const formData = new FormData();
         formData.append('department_id', departmentSelect.value);
         formData.append('strand_id', strandSelect.value);
-        formData.append('subject_id', subjectSelect.value);
-        formData.append('teacher_id', teacherSelect.value);
         formData.append('school_year_id', document.getElementById('school_year_id').value);
         
-        fetch('submit_clearance_request.php', {
+        // Add all subject-teacher pairs
+        selectedSubjects.forEach((subject, index) => {
+            formData.append(`subjects[${index}][subject_id]`, subject.subject_id);
+            formData.append(`subjects[${index}][teacher_id]`, subject.teacher_id);
+        });
+        
+        fetch('submit_multiple_clearance_requests.php', {
             method: 'POST',
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Clearance request submitted successfully!');
+                alert('Clearance requests submitted successfully!');
                 window.location.href = 'my_clearance.php';
             } else {
                 alert('Error: ' + data.message);
@@ -639,7 +960,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error:', error);
-            alert('Error submitting request. Please try again.');
+            alert('Error submitting requests. Please try again.');
         });
     });
     

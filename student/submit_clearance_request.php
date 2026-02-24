@@ -55,10 +55,10 @@ try {
     
     // Insert clearance request
     $stmt = $pdo->prepare("
-        INSERT INTO clearance_status (lrn, requirement_id, teacher_id, school_year_id, status, date_submitted) 
-        VALUES (?, ?, ?, ?, 'Pending', CURDATE())
+        INSERT INTO clearance_status (lrn, requirement_id, teacher_id, subject_id, school_year_id, status, date_submitted) 
+        VALUES (?, ?, ?, ?, ?, 'Pending', CURDATE())
     ");
-    $stmt->execute([$lrn, $requirement_id, $teacher_id, $school_year_id]);
+    $stmt->execute([$lrn, $requirement_id, $teacher_id, $subject_id, $school_year_id]);
     
     header('Content-Type: application/json');
     echo json_encode(['success' => true, 'message' => 'Clearance request submitted successfully']);
