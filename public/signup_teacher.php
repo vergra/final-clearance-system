@@ -62,8 +62,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         break;
                     }
                 }
-                $ins = $pdo->prepare('INSERT INTO teachers (surname, middle_name, given_name, department_id, subject_id, department, strand) VALUES (?, ?, ?, ?, ?, ?, ?)');
-                $ins->execute([$surname, $middle_name !== '' ? $middle_name : null, $given_name, $department_id, $subject_id > 0 ? $subject_id : null, $deptName, $strand !== '' ? $strand : null]);
+                
+                // Try to insert with text fields first, fallback to basic insert
+                try {
+                    $ins = $pdo->prepare('INSERT INTO teachers (surname, middle_name, given_name, department_id, subject_id, department, strand) VALUES (?, ?, ?, ?, ?, ?, ?)');
+                    $ins->execute([$surname, $middle_name !== '' ? $middle_name : null, $given_name, $department_id, $subject_id > 0 ? $subject_id : null, $deptName, $strand !== '' ? $strand : null]);
+                } catch (PDOException $e) {
+                    // If text columns don't exist, use basic insert
+                    if (strpos($e->getMessage(), 'Unknown column') !== false) {
+                        $ins = $pdo->prepare('INSERT INTO teachers (surname, middle_name, given_name, department_id, subject_id) VALUES (?, ?, ?, ?, ?)');
+                        $ins->execute([$surname, $middle_name !== '' ? $middle_name : null, $given_name, $department_id, $subject_id > 0 ? $subject_id : null]);
+                    } else {
+                        throw $e;
+                    }
+                }
+                
                 $teacher_id = (int) $pdo->lastInsertId();
                 $hash = password_hash($password, PASSWORD_DEFAULT);
                 $userIns = $pdo->prepare('INSERT INTO users (username, password_hash, role, reference_id) VALUES (?, ?, ?, ?)');
@@ -81,8 +94,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Load departments and subjects data for the form
 try {
     $departments = $pdo->query("SELECT department_id, department_name FROM departments ORDER BY department_name")->fetchAll();
-    $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand, department_id FROM subjects ORDER BY subject_name")->fetchAll();
-    $strandsData = $pdo->query("SELECT DISTINCT strand as strand_name, department_id FROM subjects ORDER BY strand")->fetchAll();
+    
+    // Try to load subjects with strand column, fallback without it
+    try {
+        $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand, department_id FROM subjects ORDER BY subject_name")->fetchAll();
+        $strandsData = $pdo->query("SELECT DISTINCT strand as strand_name, department_id FROM subjects ORDER BY strand")->fetchAll();
+    } catch (PDOException $e) {
+        // If strand column doesn't exist, load subjects without it and get strands from strands table
+        if (strpos($e->getMessage(), 'Unknown column') !== false) {
+            $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand_id, department_id FROM subjects ORDER BY subject_name")->fetchAll();
+            $strandsData = $pdo->query("SELECT strand_id, strand_name, department_id FROM strands ORDER BY strand_name")->fetchAll();
+        } else {
+            throw $e;
+        }
+    }
 } catch (PDOException $e) {
     $departments = [];
     $subjectsData = [];
@@ -200,8 +225,25 @@ $base = rtrim(WEB_BASE, '/');
     </main>
     <script>
     (function() {
-        var subjects = <?php echo json_encode(array_map(function($r) { return ['subject_id' => (int)$r['subject_id'], 'subject_name' => $r['subject_name'], 'strand' => $r['strand'], 'department_id' => (int)$r['department_id']]; }, $subjectsData ?? [])); ?>;
-        var strands = <?php echo json_encode(array_map(function($r) { return ['strand_name' => $r['strand_name'], 'department_id' => (int)$r['department_id']]; }, $strandsData ?? [])); ?>;
+        // Handle both old and new database structures
+        var subjects = <?php echo json_encode(array_map(function($r) { 
+            return [
+                'subject_id' => (int)$r['subject_id'], 
+                'subject_name' => $r['subject_name'], 
+                'strand' => $r['strand'] ?? null, // old structure
+                'strand_id' => $r['strand_id'] ?? null, // new structure
+                'department_id' => (int)$r['department_id']
+            ]; 
+        }, $subjectsData ?? [])); ?>;
+        
+        var strands = <?php echo json_encode(array_map(function($r) { 
+            return [
+                'strand_name' => $r['strand_name'] ?? null, // old structure
+                'strand_id' => $r['strand_id'] ?? null, // new structure
+                'department_id' => (int)$r['department_id']
+            ]; 
+        }, $strandsData ?? [])); ?>;
+        
         var departmentSelect = document.getElementById('department_id');
         var strandSelect = document.getElementById('strand');
         var subjectSelect = document.getElementById('subject_id');
@@ -217,9 +259,20 @@ $base = rtrim(WEB_BASE, '/');
             var seen = {};
             if (strands && Array.isArray(strands)) {
                 strands.forEach(function(s) {
-                    if (s.department_id === departmentId && s.strand_name && !seen[s.strand_name]) {
-                        seen[s.strand_name] = true;
-                        strandsList.push(s.strand_name);
+                    var strandName = s.strand_name; // from strands table
+                    if (strandName && s.department_id === departmentId && !seen[strandName]) {
+                        seen[strandName] = true;
+                        strandsList.push(strandName);
+                    }
+                });
+            }
+            // Also check subjects for backward compatibility
+            if (subjects && Array.isArray(subjects)) {
+                subjects.forEach(function(s) {
+                    var strandName = s.strand; // from subjects table
+                    if (strandName && s.department_id === departmentId && !seen[strandName]) {
+                        seen[strandName] = true;
+                        strandsList.push(strandName);
                     }
                 });
             }

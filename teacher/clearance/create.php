@@ -1,8 +1,8 @@
 <?php
-$baseUrl = '..';
+$baseUrl = '../..';
 $pageTitle = 'New Clearance Record';
-require_once __DIR__ . '/../config/database.php';
-require_once __DIR__ . '/../includes/auth.php';
+require_once __DIR__ . '/../../config/database.php';
+require_once __DIR__ . '/../../includes/auth.php';
 requireRole(['admin', 'teacher']);
 $pdo = getDB();
 
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-require_once __DIR__ . '/../includes/header.php';
+require_once __DIR__ . '/../../includes/header.php';
 ?>
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -124,4 +124,4 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/../includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../../includes/footer.php'; ?>

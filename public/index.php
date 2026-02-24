@@ -109,8 +109,11 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Student Dashboard</h5>
-                <p class="card-text">Check your clearance status for each requirement.</p>
-                <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/my_clearance.php" class="btn btn-primary"><i class="bi bi-check2-square me-1"></i> My Clearance</a>
+                <p class="card-text">Manage your clearance requests and view status.</p>
+                <div class="d-flex gap-2">
+                    <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/my_clearance.php" class="btn btn-primary"><i class="bi bi-check2-square me-1"></i> My Clearance</a>
+                    <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/request_clearance.php" class="btn btn-success"><i class="bi bi-file-earmark-plus me-1"></i> Request Clearance</a>
+                </div>
             </div>
         </div>
     </div>

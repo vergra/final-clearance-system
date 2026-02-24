@@ -26,12 +26,18 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h2 mb-0">My Clearance</h1>
+    <a href="request_clearance.php" class="btn btn-success"><i class="bi bi-file-earmark-plus me-1"></i> Request New Clearance</a>
 </div>
 
 <div class="card">
     <div class="card-body">
         <?php if (empty($rows)): ?>
-            <p class="text-muted mb-0">No clearance records for you yet.</p>
+            <div class="text-center py-4">
+                <i class="bi bi-file-earmark text-muted" style="font-size: 3rem;"></i>
+                <h5 class="mt-3">No Clearance Records</h5>
+                <p class="text-muted">You haven't requested any clearance yet.</p>
+                <a href="request_clearance.php" class="btn btn-success">Request Your First Clearance</a>
+            </div>
         <?php else: ?>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
