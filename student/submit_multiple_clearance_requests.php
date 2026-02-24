@@ -5,7 +5,20 @@ requireRole('student');
 
 $pdo = getDB();
 $user = getCurrentUser();
+
+// Debug: Check if user is logged in and has reference_id
+if (!$user) {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'User not logged in']);
+    exit;
+}
+
 $lrn = $user['reference_id'];
+if (!$lrn) {
+    header('Content-Type: application/json');
+    echo json_encode(['success' => false, 'message' => 'Student LRN not found in user session']);
+    exit;
+}
 
 $department_id = (int)($_POST['department_id'] ?? 0);
 $strand_id = (int)($_POST['strand_id'] ?? 0);

@@ -5,6 +5,12 @@ require_once __DIR__ . '/../includes/auth.php';
 requireRole('student');
 $pdo = getDB();
 $user = getCurrentUser();
+
+// Check if user is logged in and has LRN
+if (!$user || !$user['reference_id']) {
+    die('Error: Student information not found. Please log in again.');
+}
+
 $lrn = $user['reference_id'];
 
 // Get departments
@@ -13,6 +19,12 @@ $departments = $pdo->query("SELECT department_id, department_name FROM departmen
 // Get current school year
 $schoolYears = $pdo->query("SELECT school_year_id, year_label FROM school_year ORDER BY year_label DESC")->fetchAll();
 $currentSchoolYear = $schoolYears[0] ?? null;
+
+// Get student's block information
+$stmt = $pdo->prepare("SELECT block_code FROM students WHERE lrn = ?");
+$stmt->execute([$lrn]);
+$studentBlock = $stmt->fetch();
+$blockCode = $studentBlock ? $studentBlock['block_code'] : '';
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -433,7 +445,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h2 mb-0">Request Clearance</h1>
-    <a href="my_clearance.php" class="btn btn-outline-secondary">← Back to My Clearance</a>
+    <a href="../public/index.php" class="btn btn-outline-secondary">← Back</a>
 </div>
 
 <?php if (isset($error)): ?>
@@ -538,7 +550,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="detail-item">
                     <label>Grade & Section:</label>
-                    <span id="displayDepartment"></span>
+                    <span><?php echo htmlspecialchars($blockCode); ?></span>
                 </div>
             </div>
             <div class="details-row">
