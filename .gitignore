@@ -36,6 +36,8 @@ uploads/
 
 # Composer (if you ever add it)
 vendor/
+!assets/vendor/
+!assets/vendor/**
 composer.lock
 
 # Node.js (if you ever add it)

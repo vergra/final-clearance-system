@@ -246,9 +246,15 @@ require_once __DIR__ . '/../includes/header.php';
 
                     <div class="text-center mt-4 mb-5">
                         <div class="d-inline-flex gap-2 flex-wrap justify-content-center">
-                            <button type="button" class="btn btn-primary">
-                                <i class="bi bi-printer me-1"></i> Print Clearance Form
-                            </button>
+                            <?php if (!empty($requestData['request_group_id'])): ?>
+                                <a class="btn btn-primary" href="export_clearance_pdf.php?request_group_id=<?php echo urlencode((string)$requestData['request_group_id']); ?>" target="_blank" rel="noopener">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> Export as PDF
+                                </a>
+                            <?php else: ?>
+                                <a class="btn btn-primary" href="export_clearance_pdf.php?school_year_id=<?php echo (int)$schoolYearId; ?>&date_submitted=<?php echo urlencode((string)$requestData['date_submitted']); ?>" target="_blank" rel="noopener">
+                                    <i class="bi bi-file-earmark-pdf me-1"></i> Export as PDF
+                                </a>
+                            <?php endif; ?>
                             <?php if (!empty($requestData['request_group_id'])): ?>
                                 <a href="delete_clearance_request.php?request_group_id=<?php echo urlencode((string)$requestData['request_group_id']); ?>" class="btn btn-outline-danger" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
                                     <i class="bi bi-trash me-1"></i> Delete Form
