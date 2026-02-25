@@ -158,6 +158,7 @@ CREATE TABLE clearance_status (
     teacher_id INT NOT NULL,
     subject_id INT NOT NULL,
     school_year_id INT NOT NULL,
+    request_group_id VARCHAR(36) DEFAULT NULL,
     status ENUM('Pending', 'Approved', 'Declined') DEFAULT 'Pending',
     date_submitted DATE DEFAULT NULL,
     date_cleared DATE DEFAULT NULL,

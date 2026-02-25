@@ -2,7 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
-$pageTitle = isset($pageTitle) ? $pageTitle : 'Gradline Clearance';
+$pageTitle = isset($pageTitle) ? $pageTitle : 'Senior High School Clearance';
 if (!defined('WEB_BASE')) {
     define('WEB_BASE', '/student_clearance');
 }
@@ -25,7 +25,7 @@ $currentUser = getCurrentUser();
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
             <a class="navbar-brand fw-bold" href="<?php echo $base; ?>/public/index.php">
-                <i class="bi bi-check2-square me-2"></i>Gradline Clearance
+                <i class="bi bi-check2-square me-2"></i>Senior High School Clearance
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -37,7 +37,7 @@ $currentUser = getCurrentUser();
                         <?php if ($currentUser['role'] === 'student'): ?>
                             <li class="nav-item"><a class="nav-link" href="<?php echo $base; ?>/student/my_clearance.php">My Clearance</a></li>
                         <?php elseif ($currentUser['role'] === 'teacher'): ?>
-                            <li class="nav-item"><a class="nav-link" href="<?php echo $base; ?>/teacher/clearance/index.php">Clearance</a></li>
+                            <!-- Clearance functionality is now on homepage -->
                         <?php else: ?>
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Master Data</a>

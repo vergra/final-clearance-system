@@ -178,8 +178,8 @@ $base = rtrim(WEB_BASE, '/');
                                 <strong>Account created.</strong> You can now log in with your university email and password.
                             </div>
                             <div class="d-grid gap-2 d-md-flex justify-content-center">
-                                <a href="<?php echo $base; ?>/public/index.php" class="btn btn-success">Proceed to Home</a>
-                                <a href="<?php echo $base; ?>/public/login.php?as=teacher&username=<?php echo urlencode($email); ?>" class="btn btn-outline-secondary">Back to Login</a>
+                                <a href="<?php echo $base; ?>/public/login.php?as=teacher&username=<?php echo urlencode($email); ?>" class="btn btn-success">Proceed to Login</a>
+                                <a href="<?php echo $base; ?>/public/index.php" class="btn btn-outline-secondary">Back to Home</a>
                             </div>
                         <?php else: ?>
                             <?php if ($error): ?>

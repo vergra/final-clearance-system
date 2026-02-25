@@ -22,7 +22,7 @@ $student = $stmt->fetch();
 
 // Get clearance requests grouped by school year and department
 $stmt = $pdo->prepare("
-    SELECT c.clearance_id, c.teacher_id, c.subject_id, c.school_year_id,
+    SELECT c.clearance_id, c.teacher_id, c.subject_id, c.school_year_id, c.request_group_id,
            c.status, c.date_submitted, c.date_cleared, c.remarks,
            t.surname AS t_surname, t.given_name AS t_given, 
            sub.subject_name, d.department_name, st.strand_name, sy.year_label
@@ -39,13 +39,30 @@ $stmt = $pdo->prepare("
 $stmt->execute([$lrn]);
 $clearances = $stmt->fetchAll();
 
-// Group clearances by school year
+// Group clearances by school year + request_group_id (separate "forms")
 $groupedClearances = [];
 foreach ($clearances as $clearance) {
-    $groupedClearances[$clearance['school_year_id']]['year_label'] = $clearance['year_label'];
-    $groupedClearances[$clearance['school_year_id']]['department_name'] = $clearance['department_name'];
-    $groupedClearances[$clearance['school_year_id']]['strand_name'] = $clearance['strand_name'];
-    $groupedClearances[$clearance['school_year_id']]['clearances'][] = $clearance;
+    $syId = (int)$clearance['school_year_id'];
+    $submittedKey = $clearance['request_group_id'] ?: ($clearance['date_submitted'] ?: '0000-00-00');
+
+    if (!isset($groupedClearances[$syId])) {
+        $groupedClearances[$syId] = [
+            'year_label' => $clearance['year_label'],
+            'department_name' => $clearance['department_name'],
+            'strand_name' => $clearance['strand_name'],
+            'requests' => []
+        ];
+    }
+
+    if (!isset($groupedClearances[$syId]['requests'][$submittedKey])) {
+        $groupedClearances[$syId]['requests'][$submittedKey] = [
+            'date_submitted' => $clearance['date_submitted'],
+            'request_group_id' => $clearance['request_group_id'],
+            'clearances' => []
+        ];
+    }
+
+    $groupedClearances[$syId]['requests'][$submittedKey]['clearances'][] = $clearance;
 }
 
 require_once __DIR__ . '/../includes/header.php';
@@ -58,6 +75,9 @@ require_once __DIR__ . '/../includes/header.php';
             <i class="bi bi-arrow-left me-1"></i> Back
         </a>
         <a href="request_clearance.php" class="btn btn-success"><i class="bi bi-file-earmark-plus me-1"></i> Request New Clearance</a>
+        <button onclick="location.reload()" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-arrow-clockwise me-1"></i> Refresh Status
+        </button>
     </div>
 </div>
 
@@ -72,135 +92,127 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 <?php else: ?>
     <?php foreach ($groupedClearances as $schoolYearId => $yearData): ?>
-        <div class="mb-5 text-center">
+        <?php
+        $requests = $yearData['requests'];
+        ksort($requests);
+        $requests = array_reverse($requests, true);
+        ?>
+        <div class="mb-5">
             <div class="card-header bg-primary text-white">
                 <h5 class="mb-0"><?php echo htmlspecialchars($yearData['year_label']); ?> - <?php echo htmlspecialchars($yearData['department_name']); ?></h5>
             </div>
-            
-            <div class="bond-paper d-inline-block">
-                <div class="header">
-                    <div class="title">Student Clearance Form</div>
-                    <div class="subtitle">Gradline Senior High School</div>
-                    <div class="subtitle">School Year: <?php echo htmlspecialchars($yearData['year_label']); ?></div>
-                </div>
-                
-                <div class="student-details">
-                    <div class="details-row">
-                        <div class="detail-item">
-                            <label>Name:</label>
-                            <span><?php echo htmlspecialchars($student['surname'] . ', ' . $student['given_name'] . ' ' . $student['middle_name']); ?></span>
+
+            <?php foreach ($requests as $submittedKey => $requestData): ?>
+                <div class="text-center">
+                    <div class="bond-paper d-inline-block">
+                        <div class="header">
+                            <div class="title">Student Clearance Form</div>
+                            <div class="subtitle">Senior High School Clearance</div>
+                            <div class="subtitle">School Year: <?php echo htmlspecialchars($yearData['year_label']); ?></div>
                         </div>
-                        <div class="detail-item">
-                            <label>Grade & Section:</label>
-                            <span><?php echo htmlspecialchars($student['block_code']); ?></span>
-                        </div>
-                    </div>
-                    <div class="details-row">
-                        <div class="detail-item">
-                            <label>LRN:</label>
-                            <span><?php echo htmlspecialchars($lrn); ?></span>
-                        </div>
-                        <div class="detail-item">
-                            <label>Strand:</label>
-                            <span><?php echo htmlspecialchars($yearData['strand_name']); ?></span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="subjects-section">
-                    <div class="section-title">SUBJECTS AND TEACHERS</div>
-                    <div class="subjects-list">
-                        <?php foreach ($yearData['clearances'] as $clearance): ?>
-                            <div class="subject-item">
-                                <div class="subject-info">
-                                    <div class="teacher-section">
-                                        <span class="teacher-name"><?php echo htmlspecialchars($clearance['t_surname'] . ', ' . $clearance['t_given']); ?></span>
-                                        <div class="teacher-divider"></div>
-                                    </div>
-                                    <span class="subject-name"><?php echo htmlspecialchars($clearance['subject_name']); ?></span>
-                                    <span class="status-badge status-<?php echo strtolower($clearance['status']); ?>"><?php echo htmlspecialchars($clearance['status']); ?></span>
+
+                        <div class="student-details">
+                            <div class="details-row">
+                                <div class="detail-item">
+                                    <label>Name:</label>
+                                    <span><?php echo htmlspecialchars($student['surname'] . ', ' . $student['given_name'] . ' ' . $student['middle_name']); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Grade Block:</label>
+                                    <span><?php echo htmlspecialchars($student['block_code']); ?></span>
                                 </div>
                             </div>
-                        <?php endforeach; ?>
-                    </div>
-                </div>
-                
-                <div class="remarks-section">
-                    <div class="section-title">REMARKS</div>
-                    <div class="remarks-box">
-                        <div class="remarks-content">
-                            <?php 
-                            $remarks = [];
-                            foreach ($yearData['clearances'] as $clearance) {
-                                if (!empty($clearance['remarks'])) {
-                                    $remarks[] = htmlspecialchars($clearance['subject_name'] . ': ' . $clearance['remarks']);
-                                }
-                            }
-                            echo !empty($remarks) ? implode('<br>', $remarks) : 'No remarks yet.';
-                            ?>
+                            <div class="details-row">
+                                <div class="detail-item">
+                                    <label>LRN:</label>
+                                    <span><?php echo htmlspecialchars($lrn); ?></span>
+                                </div>
+                                <div class="detail-item">
+                                    <label>Strand:</label>
+                                    <span><?php echo htmlspecialchars($yearData['strand_name']); ?></span>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                </div>
-                
-                <div class="signature-section">
-                    <div class="signature-row">
-                        <div class="signature-box">
-                            <div class="signature-label">Student Signature</div>
-                            <div class="signature-line"></div>
-                            <div class="name-label"><?php echo htmlspecialchars($student['surname'] . ', ' . $student['given_name']); ?></div>
+
+                        <div class="subjects-section">
+                            <div class="section-title">SUBJECTS AND TEACHERS</div>
+                            <div class="subjects-list">
+                                <?php foreach ($requestData['clearances'] as $clearance): ?>
+                                    <div class="subject-item">
+                                        <div class="subject-info">
+                                            <div class="teacher-section">
+                                                <span class="teacher-name"><?php echo htmlspecialchars($clearance['t_surname'] . ', ' . $clearance['t_given']); ?></span>
+                                                <div class="teacher-divider"></div>
+                                            </div>
+                                            <span class="subject-name"><?php echo htmlspecialchars($clearance['subject_name']); ?></span>
+                                            <span class="status-badge status-<?php echo strtolower($clearance['status']); ?>"><?php echo htmlspecialchars($clearance['status']); ?></span>
+                                            <?php if ($clearance['status'] === 'Approved'): ?>
+                                                <div class="approved-indicator">
+                                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                                    <small class="text-success d-block">Cleared on <?php echo htmlspecialchars($clearance['date_cleared']); ?></small>
+                                                </div>
+                                            <?php endif; ?>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
                         </div>
-                        <div class="signature-box">
-                            <div class="signature-label">Date Submitted</div>
-                            <div class="signature-line"></div>
-                            <div class="name-label"><?php echo date('F j, Y', strtotime($yearData['clearances'][0]['date_submitted'])); ?></div>
-                        </div>
-                    </div>
-                    <div class="signature-row">
-                        <div class="signature-box">
-                            <div class="signature-label">Teacher Signature</div>
-                            <div class="signature-line"></div>
-                            <div class="name-label">Over Printed Name</div>
-                        </div>
-                        <div class="signature-box">
-                            <div class="signature-label">Department Head</div>
-                            <div class="signature-line"></div>
-                            <div class="name-label">Over Printed Name</div>
-                        </div>
-                    </div>
-                    <div class="signature-row">
-                        <div class="signature-box">
-                            <div class="signature-label">Admin Signature</div>
-                            <div class="signature-line"></div>
-                            <div class="name-label">Over Printed Name</div>
-                        </div>
-                        <div class="signature-box">
-                            <div class="signature-label">Date Cleared</div>
-                            <div class="signature-line"></div>
-                            <div class="name-label">
-                                <?php 
-                                $clearedDates = array_filter($yearData['clearances'], function($c) { return $c['date_cleared']; });
-                                if (!empty($clearedDates)) {
-                                    echo date('F j, Y', strtotime(max(array_column($clearedDates, 'date_cleared'))));
-                                } else {
-                                    echo 'Pending';
-                                }
-                                ?>
+
+                        <div class="signature-section">
+                            <div class="signature-row">
+                            </div>
+                            <div class="signature-row">
+                                <div class="signature-box">
+                                    <div class="signature-label">Guidance Signature</div>
+                                    <div class="signature-line"></div>
+                                    <div class="name-label">Over Printed Name</div>
+                                </div>
+                                <div class="signature-box">
+                                    <div class="signature-label">Principal Signature</div>
+                                    <div class="signature-line"></div>
+                                    <div class="name-label">Over Printed Name</div>
+                                </div>
+                            </div>
+                            <div class="signature-row">
+                                <div class="signature-box">
+                                    <div class="signature-label">Registrar Signature</div>
+                                    <div class="signature-line"></div>
+                                    <div class="name-label">Over Printed Name</div>
+                                </div>
+                                <div class="signature-box">
+                                    <div class="signature-label">Adviser Signature</div>
+                                    <div class="signature-line"></div>
+                                    <div class="name-label">
+                                        <?php 
+                                        $clearedDates = array_filter($requestData['clearances'], function($c) { return $c['date_cleared']; });
+                                        if (!empty($clearedDates)) {
+                                            echo date('F j, Y', strtotime(max(array_column($clearedDates, 'date_cleared'))));
+                                        } else {
+                                            echo 'Over printed Name';
+                                        }
+                                        ?>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <div class="text-center mt-3 mb-5">
+                        <button type="button" class="btn btn-primary" onclick="window.print()">
+                            <i class="bi bi-printer me-1"></i> Print Clearance Form
+                        </button>
+                        <?php if (!empty($requestData['request_group_id'])): ?>
+                            <a href="delete_clearance_request.php?request_group_id=<?php echo urlencode((string)$requestData['request_group_id']); ?>" class="btn btn-outline-danger ms-2" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
+                                <i class="bi bi-trash me-1"></i> Delete Form
+                            </a>
+                        <?php else: ?>
+                            <a href="delete_clearance_request.php?school_year_id=<?php echo (int)$schoolYearId; ?>&date_submitted=<?php echo urlencode((string)$requestData['date_submitted']); ?>" class="btn btn-outline-danger ms-2" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
+                                <i class="bi bi-trash me-1"></i> Delete Form
+                            </a>
+                        <?php endif; ?>
+                    </div>
                 </div>
-                
-                <div class="footer">
-                    <div class="footer-note">This form shows the status of your clearance requests.</div>
-                    <div class="footer-note">Teachers will review and provide feedback on your clearance status.</div>
-                </div>
-            </div>
-            
-            <div class="text-center mt-3">
-                <button type="button" class="btn btn-primary" onclick="window.print()">
-                    <i class="bi bi-printer me-1"></i> Print Clearance Form
-                </button>
-            </div>
+            <?php endforeach; ?>
         </div>
     <?php endforeach; ?>
 <?php endif; ?>
@@ -342,11 +354,34 @@ require_once __DIR__ . '/../includes/header.php';
 .status-approved {
     background: #28a745;
     color: white;
+    position: relative;
 }
 
-.status-rejected {
+.status-approved::before {
+    content: '✓ ';
+    font-weight: bold;
+}
+
+.status-declined {
     background: #dc3545;
     color: white;
+}
+
+.approved-indicator {
+    text-align: center;
+    margin-top: 8px;
+    padding: 4px;
+    border-radius: 4px;
+    background: rgba(40, 167, 69, 0.1);
+}
+
+.approved-indicator i {
+    font-size: 1.2rem;
+}
+
+.approved-indicator small {
+    font-size: 0.75rem;
+    margin-top: 2px;
 }
 
 .bond-paper .remarks-section {
@@ -361,7 +396,6 @@ require_once __DIR__ . '/../includes/header.php';
 .bond-paper .remarks-content {
     font-size: 12px;
     min-height: 50px;
-    border-bottom: 1px solid #333;
 }
 
 .bond-paper .signature-section {

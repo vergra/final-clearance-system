@@ -69,7 +69,7 @@ $roleIcon = ['student' => 'bi-person-video3 text-primary', 'teacher' => 'bi-pers
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo htmlspecialchars($pageTitle); ?> | Gradline SHS Clearance</title>
+    <title><?php echo htmlspecialchars($pageTitle); ?> | SHS Clearance</title>
     <link href="<?php echo $base; ?>/assets/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link href="<?php echo $base; ?>/assets/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
     <link href="<?php echo $base; ?>/assets/css/style.css" rel="stylesheet">
@@ -80,7 +80,7 @@ $roleIcon = ['student' => 'bi-person-video3 text-primary', 'teacher' => 'bi-pers
             <div class="card-body p-4">
                 <div class="text-center mb-4">
                     <i class="bi <?php echo $as ? $roleIcon[$as] : 'bi-check2-square text-primary'; ?>" style="font-size: 2.5rem;"></i>
-                    <h1 class="h4 mt-2">Gradline Clearance</h1>
+                    <h1 class="h4 mt-2">Senior High School Clearance</h1>
                     <p class="text-muted small"><?php echo $as ? $roleSubtext[$as] : 'Sign in to your account'; ?></p>
                     <?php if ($as): ?>
                         <span class="badge bg-secondary">Logging in as <?php echo htmlspecialchars($roleLabels[$as]); ?></span>

@@ -33,6 +33,8 @@ if (!$department_id || !$strand_id || !$school_year_id || empty($subjects)) {
 
 try {
     $pdo->beginTransaction();
+
+    $request_group_id = bin2hex(random_bytes(16));
     
     // Create a general requirement for this department if it doesn't exist
     $stmt = $pdo->prepare("
@@ -80,10 +82,10 @@ try {
         
         // Insert clearance request
         $stmt = $pdo->prepare("
-            INSERT INTO clearance_status (lrn, requirement_id, teacher_id, subject_id, school_year_id, status, date_submitted) 
-            VALUES (?, ?, ?, ?, ?, 'Pending', CURDATE())
+            INSERT INTO clearance_status (lrn, requirement_id, teacher_id, subject_id, school_year_id, request_group_id, status, date_submitted) 
+            VALUES (?, ?, ?, ?, ?, ?, 'Pending', CURDATE())
         ");
-        $stmt->execute([$lrn, $requirement_id, $teacher_id, $subject_id, $school_year_id]);
+        $stmt->execute([$lrn, $requirement_id, $teacher_id, $subject_id, $school_year_id, $request_group_id]);
         $submittedCount++;
     }
     
