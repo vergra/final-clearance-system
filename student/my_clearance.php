@@ -20,6 +20,13 @@ $stmt = $pdo->prepare("
 $stmt->execute([$lrn]);
 $student = $stmt->fetch();
 
+// Add date_returned column if it doesn't exist
+try {
+    $pdo->exec("ALTER TABLE clearance_status ADD COLUMN date_returned DATE NULL AFTER date_cleared");
+} catch (PDOException $e) {
+    // Column already exists, ignore error
+}
+
 // Get clearance requests grouped by school year and department
 $stmt = $pdo->prepare("
     SELECT c.clearance_id, c.teacher_id, c.subject_id, c.school_year_id, c.request_group_id,
@@ -103,6 +110,16 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
 
             <?php foreach ($requests as $submittedKey => $requestData): ?>
+                <?php if (isset($_GET['created'])): ?>
+                    <div class="alert alert-success py-2">Clearance request created.</div>
+                <?php endif; ?>
+                <?php if (isset($_GET['updated'])): ?>
+                    <div class="alert alert-success py-2">Clearance request updated successfully! Your return for compliance has been resubmitted and is now pending review.</div>
+                <?php endif; ?>
+                <?php if (isset($_GET['resubmitted'])): ?>
+                    <div class="alert alert-success py-2">Clearance request updated successfully! Your return for compliance has been resubmitted and is now pending review.</div>
+                <?php endif; ?>
+
                 <div class="text-center">
                     <div class="bond-paper d-inline-block">
                         <div class="header">
@@ -145,12 +162,21 @@ require_once __DIR__ . '/../includes/header.php';
                                                 <div class="teacher-divider"></div>
                                             </div>
                                             <span class="subject-name"><?php echo htmlspecialchars($clearance['subject_name']); ?></span>
-                                            <span class="status-badge status-<?php echo strtolower($clearance['status']); ?>"><?php echo htmlspecialchars($clearance['status']); ?></span>
                                             <?php if ($clearance['status'] === 'Approved'): ?>
                                                 <div class="approved-indicator">
                                                     <i class="bi bi-check-circle-fill text-success"></i>
                                                     <small class="text-success d-block">Cleared on <?php echo htmlspecialchars($clearance['date_cleared']); ?></small>
                                                 </div>
+                                            <?php elseif ($clearance['status'] === 'Declined' && !empty($clearance['remarks'])): ?>
+                                                <div class="compliance-needed-indicator">
+                                                    <i class="bi bi-exclamation-triangle-fill text-warning"></i>
+                                                    <small class="text-warning d-block">Return for Compliance</small>
+                                                    <button type="button" class="btn btn-outline-warning btn-sm mt-2" onclick="showComplianceDetails(<?php echo (int)$clearance['clearance_id']; ?>)">
+                                                        <i class="bi bi-eye me-1"></i>View Requirements
+                                                    </button>
+                                                </div>
+                                            <?php else: ?>
+                                                <span class="status-badge status-<?php echo strtolower($clearance['status']); ?>"><?php echo htmlspecialchars($clearance['status']); ?></span>
                                             <?php endif; ?>
                                         </div>
                                     </div>
@@ -384,6 +410,25 @@ require_once __DIR__ . '/../includes/header.php';
     margin-top: 2px;
 }
 
+.compliance-needed-indicator {
+    text-align: center;
+    margin-top: 8px;
+    padding: 8px;
+    border-radius: 4px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.compliance-needed-indicator i {
+    font-size: 1.2rem;
+}
+
+.compliance-needed-indicator small {
+    font-size: 0.75rem;
+    margin-top: 2px;
+    font-weight: 600;
+}
+
 .bond-paper .remarks-section {
     margin-bottom: 25px;
 }
@@ -484,5 +529,129 @@ require_once __DIR__ . '/../includes/header.php';
     }
 }
 </style>
+
+<!-- Compliance Details Modal -->
+<div class="modal fade" id="complianceDetailsModal" tabindex="-1" aria-labelledby="complianceDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-warning text-dark">
+                <h5 class="modal-title" id="complianceDetailsModalLabel">
+                    <i class="bi bi-exclamation-triangle me-2"></i>Return for Compliance Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="complianceDetailsContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-warning" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted">Loading compliance details...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-warning" onclick="requestNewClearance()">
+                    <i class="bi bi-arrow-clockwise me-1"></i>Request Again
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showComplianceDetails(clearanceId) {
+    const modal = new bootstrap.Modal(document.getElementById('complianceDetailsModal'));
+    const content = document.getElementById('complianceDetailsContent');
+    
+    // Show loading state
+    content.innerHTML = `
+        <div class="text-center py-4">
+            <div class="spinner-border text-warning" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-2 text-muted">Loading compliance details...</p>
+        </div>
+    `;
+    
+    // Fetch compliance details
+    fetch('get_compliance_details.php?id=' + clearanceId)
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                content.innerHTML = `
+                    <div class="alert alert-danger">
+                        <i class="bi bi-exclamation-triangle me-2"></i>
+                        ${data.error}
+                    </div>
+                `;
+                return;
+            }
+            
+            content.innerHTML = `
+                <div class="alert alert-warning border border-warning">
+                    <div class="d-flex align-items-start">
+                        <i class="bi bi-exclamation-triangle-fill me-3" style="font-size: 1.5rem;"></i>
+                        <div>
+                            <h6 class="alert-heading mb-2">Requirements Needed</h6>
+                            <p class="mb-0">${data.requirements}</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">Teacher:</small>
+                        <p class="mb-1"><strong>${data.teacher_name}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Subject:</small>
+                        <p class="mb-1"><strong>${data.subject_name}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Date Returned:</small>
+                        <p class="mb-1"><strong>${data.date_returned || data.date_cleared || 'Not available'}</strong></p>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Requirement:</small>
+                        <p class="mb-1"><strong>${data.requirement_name}</strong></p>
+                    </div>
+                </div>
+                
+                <div class="mt-3 p-3 bg-light rounded">
+                    <h6 class="text-muted mb-2">Next Steps:</h6>
+                    <ol class="mb-0 small">
+                        <li>Complete the requirements listed above</li>
+                        <li>Prepare necessary documents</li>
+                        <li>Click "Request Again" to automatically resubmit to the same teacher</li>
+                    </ol>
+                </div>
+            `;
+            
+            // Update the request again button to pass the clearance ID
+            document.querySelector('[onclick="requestNewClearance()"]').setAttribute('onclick', `requestNewClearance(${data.clearance_id})`);
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            content.innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Failed to load compliance details. Please try again.
+                </div>
+            `;
+        });
+    
+    modal.show();
+}
+
+function requestNewClearance(clearanceId = null) {
+    if (clearanceId) {
+        window.location.href = 'resubmit_clearance.php?id=' + clearanceId;
+    } else {
+        window.location.href = 'request_clearance.php';
+    }
+}
+</script>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

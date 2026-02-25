@@ -24,6 +24,13 @@ if ($clearance_id <= 0 || !in_array($status, ['Approved', 'Declined'])) {
 }
 
 try {
+    // Add date_returned column if it doesn't exist
+    try {
+        $pdo->exec("ALTER TABLE clearance_status ADD COLUMN date_returned DATE NULL AFTER date_cleared");
+    } catch (PDOException $e) {
+        // Column already exists, ignore error
+    }
+    
     // Verify teacher owns this clearance record
     $stmt = $pdo->prepare("
         SELECT clearance_id, teacher_id, status 
@@ -40,14 +47,25 @@ try {
     }
 
     // Update clearance status
-    $updateStmt = $pdo->prepare("
-        UPDATE clearance_status 
-        SET status = ?, remarks = ?, date_cleared = ? 
-        WHERE clearance_id = ?
-    ");
-    
-    $date_cleared = ($status === 'Approved') ? date('Y-m-d') : null;
-    $updateStmt->execute([$status, $remarks, $date_cleared, $clearance_id]);
+    if ($status === 'Declined') {
+        // For returned compliance, set both date_cleared and date_returned
+        $updateStmt = $pdo->prepare("
+            UPDATE clearance_status 
+            SET status = ?, remarks = ?, date_cleared = ?, date_returned = ? 
+            WHERE clearance_id = ?
+        ");
+        $current_date = date('Y-m-d');
+        $updateStmt->execute([$status, $remarks, $current_date, $current_date, $clearance_id]);
+    } else {
+        // For approved status, only set date_cleared
+        $updateStmt = $pdo->prepare("
+            UPDATE clearance_status 
+            SET status = ?, remarks = ?, date_cleared = ? 
+            WHERE clearance_id = ?
+        ");
+        $date_cleared = ($status === 'Approved') ? date('Y-m-d') : null;
+        $updateStmt->execute([$status, $remarks, $date_cleared, $clearance_id]);
+    }
 
     header('Content-Type: application/json');
     echo json_encode(['success' => true, 'message' => 'Clearance status updated successfully']);
