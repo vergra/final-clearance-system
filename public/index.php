@@ -22,51 +22,121 @@ if ($currentUser === null) {
     $base = rtrim(WEB_BASE, '/');
     require_once __DIR__ . '/../includes/header.php';
     ?>
-    <div class="row mb-4">
-        <div class="col text-center">
-            <h1 class="h2">Senior High School Clearance</h1>
-            <p class="text-muted">Digitize and streamline the clearance process. Choose how you want to sign in.</p>
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="text-center">
+                <div class="mb-4">
+                    <div class="bg-gradient-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 100px; height: 100px;">
+                        <i class="bi bi-check2-square" style="font-size: 3rem;"></i>
+                    </div>
+                </div>
+                <h1 class="h1 mb-3 fw-bold text-primary">Senior High School Clearance</h1>
+                <p class="lead text-muted mb-4">Digitize and streamline the clearance process with our comprehensive management system</p>
+                <div class="d-flex justify-content-center gap-3 flex-wrap">
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-shield-check me-1"></i>Secure
+                    </span>
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-lightning me-1"></i>Fast
+                    </span>
+                    <span class="badge bg-light text-dark px-3 py-2">
+                        <i class="bi bi-graph-up me-1"></i>Efficient
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="row g-4 justify-content-center py-4">
+    <div class="row g-4 justify-content-center">
         <div class="col-md-6 col-lg-4">
             <a href="<?php echo $base; ?>/public/login.php?as=student" class="text-decoration-none">
-                <div class="card h-100 border-primary shadow-sm hover-lift">
+                <div class="card h-100 border-0 shadow-lg hover-lift">
                     <div class="card-body text-center py-5">
-                        <i class="bi bi-person-video3 text-primary" style="font-size: 3rem;"></i>
-                        <h5 class="card-title mt-3">Student</h5>
-                        <p class="card-text text-muted small">View your clearance status</p>
-                        <span class="btn btn-primary mt-2">Log in as Student</span>
+                        <div class="bg-primary bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-video3" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Student</h5>
+                        <p class="card-text text-muted">View your clearance status and manage compliance requirements</p>
+                        <span class="btn btn-primary">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Log in as Student
+                        </span>
                     </div>
                 </div>
             </a>
         </div>
         <div class="col-md-6 col-lg-4">
             <a href="<?php echo $base; ?>/public/login.php?as=teacher" class="text-decoration-none">
-                <div class="card h-100 border-success shadow-sm hover-lift">
+                <div class="card h-100 border-0 shadow-lg hover-lift">
                     <div class="card-body text-center py-5">
-                        <i class="bi bi-person-badge text-success" style="font-size: 3rem;"></i>
-                        <h5 class="card-title mt-3">Teacher</h5>
-                        <p class="card-text text-muted small">Review and approve clearances</p>
-                        <span class="btn btn-success mt-2">Log in as Teacher</span>
+                        <div class="bg-success bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-person-badge" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Teacher</h5>
+                        <p class="card-text text-muted">Review and approve clearances with compliance tracking</p>
+                        <span class="btn btn-success">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Log in as Teacher
+                        </span>
                     </div>
                 </div>
             </a>
         </div>
         <div class="col-md-6 col-lg-4">
             <a href="<?php echo $base; ?>/public/login.php?as=admin" class="text-decoration-none">
-                <div class="card h-100 border-secondary shadow-sm hover-lift">
+                <div class="card h-100 border-0 shadow-lg hover-lift">
                     <div class="card-body text-center py-5">
-                        <i class="bi bi-gear-wide-connected text-secondary" style="font-size: 3rem;"></i>
-                        <h5 class="card-title mt-3">Admin</h5>
-                        <p class="card-text text-muted small">Manage data and user accounts</p>
-                        <span class="btn btn-secondary mt-2">Log in as Admin</span>
+                        <div class="bg-danger bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-gear" style="font-size: 2rem;"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Administrator</h5>
+                        <p class="card-text text-muted">Manage system settings and user accounts</p>
+                        <span class="btn btn-danger">
+                            <i class="bi bi-box-arrow-in-right me-1"></i>Log in as Admin
+                        </span>
                     </div>
                 </div>
             </a>
         </div>
     </div>
-    <?php require_once __DIR__ . '/../includes/footer.php'; ?>
+    <style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+.bg-primary.bg-gradient {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.bg-success.bg-gradient {
+    background: linear-gradient(135deg, #28a745 0%, #1e7e34 100%) !important;
+}
+
+.bg-danger.bg-gradient {
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.hover-lift {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+}
+
+.card {
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+}
+
+.badge {
+    font-weight: 500;
+    letter-spacing: 0.5px;
+}
+</style>
+
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>
     <?php
     exit;
 }
@@ -90,29 +160,44 @@ if ($currentUser['role'] === 'admin') {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="row mb-4">
-    <div class="col">
-        <h1 class="h2">Senior High School Clearance</h1>
-        <?php if ($currentUser['role'] === 'student'): ?>
-            <p class="text-muted">View your clearance status and requirements.</p>
-        <?php elseif ($currentUser['role'] === 'teacher'): ?>
-            <p class="text-muted">Review and approve clearance requests for your department.</p>
-        <?php else: ?>
-            <p class="text-muted">Digitize and streamline the clearance process. Track status online; verify and approve requests efficiently.</p>
-        <?php endif; ?>
+<div class="row mb-5">
+    <div class="col-12">
+        <div class="text-center">
+            <h1 class="h2 mb-3 fw-bold text-primary">
+                <i class="bi bi-clipboard-check me-2"></i>Clearance Home
+            </h1>
+            <p class="lead text-muted">
+                <?php if ($currentUser['role'] === 'student'): ?>
+                    View your clearance status and manage compliance requirements
+                <?php elseif ($currentUser['role'] === 'teacher'): ?>
+                    Review and approve clearance requests with compliance tracking
+                <?php else: ?>
+                    Manage and monitor the entire clearance system
+                <?php endif; ?>
+            </p>
+        </div>
     </div>
 </div>
 
 <?php if ($currentUser['role'] === 'student'): ?>
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">Student Dashboard</h5>
-                <p class="card-text">Manage your clearance requests and view status.</p>
-                <div class="d-flex gap-2">
-                    <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/my_clearance.php" class="btn btn-primary"><i class="bi bi-check2-square me-1"></i> My Clearance</a>
-                    <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/request_clearance.php" class="btn btn-success"><i class="bi bi-file-earmark-plus me-1"></i> Request Clearance</a>
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card border-0 shadow-lg">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <div class="bg-primary bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
+                        <i class="bi bi-person-video3" style="font-size: 2rem;"></i>
+                    </div>
+                </div>
+                <h4 class="card-title fw-bold mb-3">Student Home</h4>
+                <p class="card-text text-muted mb-4">Manage your clearance requests and track compliance requirements</p>
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/my_clearance.php" class="btn btn-primary btn-lg">
+                        <i class="bi bi-clipboard-check me-2"></i> My Clearance
+                    </a>
+                    <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/student/request_clearance.php" class="btn btn-success btn-lg">
+                        <i class="bi bi-file-earmark-plus me-2"></i> Request Clearance
+                    </a>
                 </div>
             </div>
         </div>

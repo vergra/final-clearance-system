@@ -40,7 +40,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <p class="text-muted mb-0">Manage teacher accounts and assignments</p>
     </div>
     <div>
-        <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Dashboard</a>
+        <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Home</a>
         <a href="create.php" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Teacher</a>
     </div>
 </div>

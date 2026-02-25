@@ -75,26 +75,43 @@ foreach ($clearances as $clearance) {
 require_once __DIR__ . '/../includes/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h2 mb-0">My Clearance</h1>
-    <div>
-        <a href="../public/index.php" class="btn btn-outline-secondary me-2">
-            <i class="bi bi-arrow-left me-1"></i> Back
-        </a>
-        <a href="request_clearance.php" class="btn btn-success"><i class="bi bi-file-earmark-plus me-1"></i> Request New Clearance</a>
-        <button onclick="location.reload()" class="btn btn-outline-primary btn-sm">
-            <i class="bi bi-arrow-clockwise me-1"></i> Refresh Status
-        </button>
+<div class="text-center mb-5">
+    <div class="d-inline-block">
+        <h1 class="h2 mb-3 fw-bold text-primary">
+            <i class="bi bi-clipboard-check me-2"></i>My Clearance
+        </h1>
+        <p class="text-muted mb-4">Track your clearance status and manage compliance requirements</p>
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <a href="../public/index.php" class="btn btn-outline-secondary">
+                <i class="bi bi-house me-1"></i> Home
+            </a>
+            <a href="request_clearance.php" class="btn btn-success">
+                <i class="bi bi-file-earmark-plus me-1"></i> Request New Clearance
+            </a>
+            <button onclick="location.reload()" class="btn btn-outline-primary">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refresh
+            </button>
+        </div>
     </div>
 </div>
 
 <?php if (empty($groupedClearances)): ?>
-    <div class="card">
-        <div class="card-body text-center py-5">
-            <i class="bi bi-file-earmark text-muted" style="font-size: 4rem;"></i>
-            <h5 class="mt-3">No Clearance Records</h5>
-            <p class="text-muted">You haven't requested any clearance yet.</p>
-            <a href="request_clearance.php" class="btn btn-success">Request Your First Clearance</a>
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card border-0 shadow-sm">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                            <i class="bi bi-clipboard-x text-muted" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                    <h4 class="mb-3">No Clearance Records</h4>
+                    <p class="text-muted mb-4">You haven't requested any clearance yet. Start your clearance process by creating your first request.</p>
+                    <a href="request_clearance.php" class="btn btn-success btn-lg">
+                        <i class="bi bi-file-earmark-plus me-2"></i>Request Your First Clearance
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 <?php else: ?>
@@ -104,10 +121,14 @@ require_once __DIR__ . '/../includes/header.php';
         ksort($requests);
         $requests = array_reverse($requests, true);
         ?>
-        <div class="mb-5">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0"><?php echo htmlspecialchars($yearData['year_label']); ?> - <?php echo htmlspecialchars($yearData['department_name']); ?></h5>
-            </div>
+        <div class="row justify-content-center mb-5">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-gradient-primary text-white border-0">
+                        <h5 class="mb-0 text-center">
+                            <i class="bi bi-calendar3 me-2"></i><?php echo htmlspecialchars($yearData['year_label']); ?> - <?php echo htmlspecialchars($yearData['department_name']); ?>
+                        </h5>
+                    </div>
 
             <?php foreach ($requests as $submittedKey => $requestData): ?>
                 <?php if (isset($_GET['created'])): ?>
@@ -120,8 +141,8 @@ require_once __DIR__ . '/../includes/header.php';
                     <div class="alert alert-success py-2">Clearance request updated successfully! Your return for compliance has been resubmitted and is now pending review.</div>
                 <?php endif; ?>
 
-                <div class="text-center">
-                    <div class="bond-paper d-inline-block">
+                <div class="text-center py-4">
+                    <div class="bond-paper d-inline-block shadow-lg">
                         <div class="header">
                             <div class="title">Student Clearance Form</div>
                             <div class="subtitle">Senior High School Clearance</div>
@@ -223,19 +244,21 @@ require_once __DIR__ . '/../includes/header.php';
                         </div>
                     </div>
 
-                    <div class="text-center mt-3 mb-5">
-                        <button type="button" class="btn btn-primary" onclick="window.print()">
-                            <i class="bi bi-printer me-1"></i> Print Clearance Form
-                        </button>
-                        <?php if (!empty($requestData['request_group_id'])): ?>
-                            <a href="delete_clearance_request.php?request_group_id=<?php echo urlencode((string)$requestData['request_group_id']); ?>" class="btn btn-outline-danger ms-2" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
-                                <i class="bi bi-trash me-1"></i> Delete Form
-                            </a>
-                        <?php else: ?>
-                            <a href="delete_clearance_request.php?school_year_id=<?php echo (int)$schoolYearId; ?>&date_submitted=<?php echo urlencode((string)$requestData['date_submitted']); ?>" class="btn btn-outline-danger ms-2" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
-                                <i class="bi bi-trash me-1"></i> Delete Form
-                            </a>
-                        <?php endif; ?>
+                    <div class="text-center mt-4 mb-5">
+                        <div class="d-inline-flex gap-2 flex-wrap justify-content-center">
+                            <button type="button" class="btn btn-primary">
+                                <i class="bi bi-printer me-1"></i> Print Clearance Form
+                            </button>
+                            <?php if (!empty($requestData['request_group_id'])): ?>
+                                <a href="delete_clearance_request.php?request_group_id=<?php echo urlencode((string)$requestData['request_group_id']); ?>" class="btn btn-outline-danger" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
+                                    <i class="bi bi-trash me-1"></i> Delete Form
+                                </a>
+                            <?php else: ?>
+                                <a href="delete_clearance_request.php?school_year_id=<?php echo (int)$schoolYearId; ?>&date_submitted=<?php echo urlencode((string)$requestData['date_submitted']); ?>" class="btn btn-outline-danger" onclick="return confirm('Delete this clearance request form? This will remove all subjects/teachers in this form.');">
+                                    <i class="bi bi-trash me-1"></i> Delete Form
+                                </a>
+                            <?php endif; ?>
+                        </div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -244,17 +267,28 @@ require_once __DIR__ . '/../includes/header.php';
 <?php endif; ?>
 
 <style>
+.bg-gradient-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
 .bond-paper {
     background: white;
     width: 8.5in;
     min-height: 11in;
     padding: 1in;
-    margin: 20px 0;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    margin: 20px auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+    border-radius: 8px;
     font-family: 'Times New Roman', serif;
     font-size: 12pt;
     line-height: 1.4;
     text-align: left;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.bond-paper:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.2);
 }
 
 .bond-paper .header {

@@ -45,7 +45,7 @@ require_once __DIR__ . '/../../includes/header.php';
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h2 mb-0">Edit Department</h1>
     <div>
-        <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Dashboard</a>
+        <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Home</a>
         <a href="index.php" class="btn btn-outline-secondary">Back to Departments</a>
     </div>
 </div>

@@ -24,7 +24,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <p class="text-muted mb-0">Review and approve student/teacher registration requests</p>
     </div>
     <div>
-        <a href="../../public/index.php" class="btn btn-outline-secondary">← Back to Dashboard</a>
+        <a href="../../public/index.php" class="btn btn-outline-secondary">← Back to Home</a>
     </div>
 </div>
 

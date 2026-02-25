@@ -18,7 +18,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <p class="text-muted mb-0">Manage departments, strands, and subjects</p>
     </div>
     <div>
-        <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Dashboard</a>
+        <a href="../../public/index.php" class="btn btn-outline-secondary me-2">← Back to Home</a>
         <a href="create.php" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Department</a>
     </div>
 </div>
