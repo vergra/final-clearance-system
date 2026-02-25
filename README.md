@@ -29,8 +29,7 @@ The database structure follows the provided Entity Relationship Diagram (ERD), p
 
 3. **Create the database**  
    - Open **phpMyAdmin**: `http://localhost/phpmyadmin`
-   - Create a new database **student_clearance** (if needed), then Import → choose `database/schema.sql` (this creates all tables, including **users**, and sample data).
-   - If you already have the database and only need login support, run `database/auth_schema.sql` to add the `users` table and a default admin account.
+   - Create a new database **student_clearance** (if needed), then Import → choose `database/complete_schema_with_compliance_system.sql`.
 
 4. **Database configuration**  
    - The app is set to use database **student_clearance**. Edit `config/database.php` if your MySQL user/password differ (default XAMPP: user `root`, password empty).
@@ -48,7 +47,7 @@ student_clearance/
 ├── config/
 │   └── database.php       # MySQL connection (PDO)
 ├── database/
-│   └── schema.sql        # Full DB schema + sample data
+│   └── complete_schema_with_compliance_system.sql
 ├── includes/
 │   ├── header.php        # Nav + HTML head (role-based)
 │   ├── footer.php        # Footer + scripts
