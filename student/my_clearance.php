@@ -611,7 +611,7 @@ function showComplianceDetails(clearanceId) {
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted">Date Returned:</small>
-                        <p class="mb-1"><strong>${data.date_returned || data.date_cleared || 'Not available'}</strong></p>
+                        <p class="mb-1"><strong>${data.date_returned}</strong></p>
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted">Requirement:</small>

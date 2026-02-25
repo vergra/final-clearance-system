@@ -22,6 +22,14 @@ try {
         // Column already exists, ignore error
     }
     
+    // Update existing declined records to have date_returned if it's null
+    $updateStmt = $pdo->prepare("
+        UPDATE clearance_status 
+        SET date_returned = date_cleared 
+        WHERE clearance_id = ? AND status = 'Declined' AND date_returned IS NULL AND date_cleared IS NOT NULL
+    ");
+    $updateStmt->execute([$clearance_id]);
+    
     // Get compliance details for the student's clearance
     $stmt = $pdo->prepare("
         SELECT c.clearance_id, c.lrn, c.requirement_id, c.teacher_id, c.subject_id, c.school_year_id,
@@ -56,7 +64,7 @@ try {
         'requirement_name' => $data['requirement_name'],
         'year_label' => $data['year_label'],
         'date_cleared' => $data['date_cleared'],
-        'date_returned' => $data['date_returned'],
+        'date_returned' => $data['date_returned'] ?: $data['date_cleared'] ?: date('Y-m-d'),
         'status' => $data['status']
     ];
 
