@@ -4,7 +4,12 @@
 
 -- Drop existing tables if they exist (for clean migration)
 SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS students_clearance_status;
+DROP TABLE IF EXISTS students_requirement;
+DROP TABLE IF EXISTS student_subject;
+DROP TABLE IF EXISTS signup_requests;
 DROP TABLE IF EXISTS clearance_status;
+DROP TABLE IF EXISTS teacher_subject;
 DROP TABLE IF EXISTS teachers;
 DROP TABLE IF EXISTS students;
 DROP TABLE IF EXISTS subjects;
@@ -23,6 +28,9 @@ CREATE TABLE departments (
     description TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Create teacher-subject assignment table (many-to-many)
+-- (created later, after teachers/subjects/school_year tables)
 
 -- Create strands table
 CREATE TABLE strands (
@@ -59,7 +67,7 @@ CREATE TABLE blocks (
 CREATE TABLE users (
     user_id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
     role ENUM('admin', 'teacher', 'student') NOT NULL,
     reference_id VARCHAR(50), -- Links to teacher_id or student_lrn
     email VARCHAR(100),
@@ -105,6 +113,24 @@ CREATE TABLE students (
     INDEX idx_strand (strand)
 );
 
+-- Create signup requests table (student requests for account approval)
+CREATE TABLE signup_requests (
+    signup_request_id INT AUTO_INCREMENT PRIMARY KEY,
+    lrn VARCHAR(12) NOT NULL,
+    requested_username VARCHAR(80) NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    status ENUM('pending', 'approved', 'declined') DEFAULT 'pending',
+    requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at TIMESTAMP NULL,
+    reviewed_by INT NULL,
+    remarks TEXT DEFAULT NULL,
+    FOREIGN KEY (lrn) REFERENCES students(lrn) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(user_id) ON DELETE SET NULL,
+    UNIQUE KEY unique_requested_username (requested_username),
+    INDEX idx_signup_status (status),
+    INDEX idx_signup_requested_at (requested_at)
+);
+
 -- Create subjects table
 CREATE TABLE subjects (
     subject_id INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,6 +156,44 @@ CREATE TABLE requirements (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_name (requirement_name),
     INDEX idx_type (requirement_type)
+);
+
+-- Create teacher-subject assignment table (many-to-many)
+-- (created later, after teachers/subjects/school_year tables)
+
+-- Create student-subject assignment table (enrollment)
+CREATE TABLE student_subject (
+    student_subject_id INT AUTO_INCREMENT PRIMARY KEY,
+    lrn VARCHAR(12) NOT NULL,
+    subject_id INT NOT NULL,
+    teacher_id INT DEFAULT NULL,
+    school_year_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (lrn) REFERENCES students(lrn) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE SET NULL,
+    FOREIGN KEY (school_year_id) REFERENCES school_year(school_year_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_enrollment (lrn, subject_id, school_year_id),
+    INDEX idx_student_subject_lrn (lrn),
+    INDEX idx_student_subject_subject (subject_id),
+    INDEX idx_student_subject_school_year (school_year_id),
+    INDEX idx_student_subject_teacher (teacher_id)
+);
+
+-- Create teacher-subject assignment table (many-to-many)
+CREATE TABLE teacher_subject (
+    teacher_subject_id INT AUTO_INCREMENT PRIMARY KEY,
+    teacher_id INT NOT NULL,
+    subject_id INT NOT NULL,
+    school_year_id INT NOT NULL,
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (teacher_id) REFERENCES teachers(teacher_id) ON DELETE CASCADE,
+    FOREIGN KEY (subject_id) REFERENCES subjects(subject_id) ON DELETE CASCADE,
+    FOREIGN KEY (school_year_id) REFERENCES school_year(school_year_id) ON DELETE CASCADE,
+    UNIQUE KEY unique_teacher_subject_year (teacher_id, subject_id, school_year_id),
+    INDEX idx_teacher_subject_teacher (teacher_id),
+    INDEX idx_teacher_subject_subject (subject_id),
+    INDEX idx_teacher_subject_school_year (school_year_id)
 );
 
 -- Create clearance_status table with compliance tracking
@@ -167,6 +231,26 @@ CREATE TABLE clearance_status (
     UNIQUE KEY unique_clearance (lrn, requirement_id, teacher_id, subject_id, school_year_id)
 );
 
+-- Create students_requirement junction table
+CREATE TABLE students_requirement (
+    lrn VARCHAR(12) NOT NULL,
+    requirement_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (lrn, requirement_id),
+    FOREIGN KEY (lrn) REFERENCES students(lrn) ON DELETE CASCADE,
+    FOREIGN KEY (requirement_id) REFERENCES requirements(requirement_id) ON DELETE CASCADE
+);
+
+-- Create students_clearance_status junction table
+CREATE TABLE students_clearance_status (
+    lrn VARCHAR(12) NOT NULL,
+    clearance_id INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (lrn, clearance_id),
+    FOREIGN KEY (lrn) REFERENCES students(lrn) ON DELETE CASCADE,
+    FOREIGN KEY (clearance_id) REFERENCES clearance_status(clearance_id) ON DELETE CASCADE
+);
+
 -- Insert default departments
 INSERT INTO departments (department_name, description) VALUES
 ('Senior High School', 'Senior High School Department'),
@@ -202,7 +286,7 @@ INSERT INTO requirements (requirement_name, description, requirement_type) VALUE
 ('Property Clearance', 'Clearance for school properties and equipment', 'administrative');
 
 -- Insert default admin user (password: admin123)
-INSERT INTO users (username, password, role, reference_id, email) VALUES
+INSERT INTO users (username, password_hash, role, reference_id, email) VALUES
 ('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL, 'admin@school.edu');
 
 -- Create views for common queries
@@ -354,11 +438,6 @@ BEGIN
     END IF;
 END //
 DELIMITER ;
-
--- Create indexes for better performance
-CREATE INDEX idx_clearance_composite ON clearance_status(lrn, school_year_id, status);
-CREATE INDEX idx_teacher_workload ON clearance_status(teacher_id, school_year_id, status);
-CREATE INDEX idx_compliance_tracking ON clearance_status(status, date_returned, date_cleared);
 
 -- Final setup
 SET FOREIGN_KEY_CHECKS = 1;

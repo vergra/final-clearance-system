@@ -25,14 +25,19 @@ This guide helps you safely deploy the complete clearance system with compliance
    SOURCE complete_schema_with_compliance_system.sql;
    ```
 
-3. **Configure Application**
+3. **Verify Schema (Recommended)**
+   - Visit `http://localhost/student_clearance/database/verify_schema.php`
+   - Confirm it shows **Schema looks OK for this application**
+
+4. **Configure Application**
    - Copy entire `student_clearance` folder to web root
    - Update `config/database.php` with new database credentials
    - Set proper file permissions (755 for folders, 644 for files)
 
-4. **Create Admin User**
+5. **Create Admin User**
    - Default admin: username `admin`, password `admin123`
    - Change password immediately after first login
+   - Note: The system also contains hardcoded fallback accounts in `includes/auth.php`.
 
 ### Option 2: Data Migration
 **Best for:** Moving existing data to new device
