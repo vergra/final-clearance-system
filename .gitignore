@@ -3,11 +3,11 @@ logs/
 tmp/
 temp/
 
-# # Database backups and sensitive files
-# *.sql
-# *.db
-# *.sqlite
-# config/database.php
+# Database backups and sensitive files
+*.sql
+*.db
+*.sqlite
+config/database.php
 
 # Environment and secrets
 .env
