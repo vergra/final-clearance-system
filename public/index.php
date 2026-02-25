@@ -22,27 +22,17 @@ if ($currentUser === null) {
     $base = rtrim(WEB_BASE, '/');
     require_once __DIR__ . '/../includes/header.php';
     ?>
-    <div class="row mb-5">
+    <div class="landing-page">
+    <div class="row mb-4">
         <div class="col-12">
             <div class="text-center">
-                <div class="mb-4">
-                    <div class="bg-gradient-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 100px; height: 100px;">
-                        <i class="bi bi-check2-square" style="font-size: 3rem;"></i>
+                <div class="mb-3">
+                    <div class="bg-gradient-primary rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-2" style="width: 80px; height: 80px;">
+                        <i class="bi bi-check2-square" style="font-size: 2.5rem;"></i>
                     </div>
                 </div>
-                <h1 class="h1 mb-3 fw-bold text-primary">Senior High School Clearance</h1>
-                <p class="lead text-muted mb-4">Digitize and streamline the clearance process with our comprehensive management system</p>
-                <div class="d-flex justify-content-center gap-3 flex-wrap">
-                    <span class="badge bg-light text-dark px-3 py-2">
-                        <i class="bi bi-shield-check me-1"></i>Secure
-                    </span>
-                    <span class="badge bg-light text-dark px-3 py-2">
-                        <i class="bi bi-lightning me-1"></i>Fast
-                    </span>
-                    <span class="badge bg-light text-dark px-3 py-2">
-                        <i class="bi bi-graph-up me-1"></i>Efficient
-                    </span>
-                </div>
+                <h1 class="h2 mb-2 fw-bold text-primary">Senior High School Clearance</h1>
+                <p class="text-muted mb-3">Digitize and streamline the clearance process with our comprehensive management system</p>
             </div>
         </div>
     </div>
@@ -50,13 +40,13 @@ if ($currentUser === null) {
         <div class="col-md-6 col-lg-4">
             <a href="<?php echo $base; ?>/public/login.php?as=student" class="text-decoration-none">
                 <div class="card h-100 border-0 shadow-lg hover-lift">
-                    <div class="card-body text-center py-5">
-                        <div class="bg-primary bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
-                            <i class="bi bi-person-video3" style="font-size: 2rem;"></i>
+                    <div class="card-body text-center py-4">
+                        <div class="bg-primary bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-person-video3" style="font-size: 1.5rem;"></i>
                         </div>
                         <h5 class="card-title fw-bold">Student</h5>
-                        <p class="card-text text-muted">View your clearance status and manage compliance requirements</p>
-                        <span class="btn btn-primary">
+                        <p class="card-text text-muted small">View your clearance status and manage compliance requirements</p>
+                        <span class="btn btn-primary btn-sm">
                             <i class="bi bi-box-arrow-in-right me-1"></i>Log in as Student
                         </span>
                     </div>
@@ -66,13 +56,13 @@ if ($currentUser === null) {
         <div class="col-md-6 col-lg-4">
             <a href="<?php echo $base; ?>/public/login.php?as=teacher" class="text-decoration-none">
                 <div class="card h-100 border-0 shadow-lg hover-lift">
-                    <div class="card-body text-center py-5">
-                        <div class="bg-success bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
-                            <i class="bi bi-person-badge" style="font-size: 2rem;"></i>
+                    <div class="card-body text-center py-4">
+                        <div class="bg-success bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-person-badge" style="font-size: 1.5rem;"></i>
                         </div>
                         <h5 class="card-title fw-bold">Teacher</h5>
-                        <p class="card-text text-muted">Review and approve clearances with compliance tracking</p>
-                        <span class="btn btn-success">
+                        <p class="card-text text-muted small">Review and approve clearances with compliance tracking</p>
+                        <span class="btn btn-success btn-sm">
                             <i class="bi bi-box-arrow-in-right me-1"></i>Log in as Teacher
                         </span>
                     </div>
@@ -82,19 +72,20 @@ if ($currentUser === null) {
         <div class="col-md-6 col-lg-4">
             <a href="<?php echo $base; ?>/public/login.php?as=admin" class="text-decoration-none">
                 <div class="card h-100 border-0 shadow-lg hover-lift">
-                    <div class="card-body text-center py-5">
-                        <div class="bg-danger bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 80px; height: 80px;">
-                            <i class="bi bi-gear" style="font-size: 2rem;"></i>
+                    <div class="card-body text-center py-4">
+                        <div class="bg-danger bg-gradient rounded-circle d-inline-flex align-items-center justify-content-center text-white mb-3" style="width: 60px; height: 60px;">
+                            <i class="bi bi-gear" style="font-size: 1.5rem;"></i>
                         </div>
                         <h5 class="card-title fw-bold">Administrator</h5>
-                        <p class="card-text text-muted">Manage system settings and user accounts</p>
-                        <span class="btn btn-danger">
+                        <p class="card-text text-muted small">Manage system settings and user accounts</p>
+                        <span class="btn btn-danger btn-sm">
                             <i class="bi bi-box-arrow-in-right me-1"></i>Log in as Admin
                         </span>
                     </div>
                 </div>
             </a>
         </div>
+    </div>
     </div>
     <style>
 .bg-gradient-primary {
@@ -134,6 +125,46 @@ if ($currentUser === null) {
     font-weight: 500;
     letter-spacing: 0.5px;
 }
+
+/* Optimize landing page for no scroll */
+.landing-page {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.landing-page .row:first-child {
+    margin-bottom: 2rem !important;
+}
+
+.landing-page .row:last-child {
+    margin-bottom: 0 !important;
+}
+
+@media (min-height: 700px) {
+    .landing-page {
+        min-height: calc(100vh - 150px);
+    }
+}
+
+/* Simple admin card hover effects */
+.admin-card-simple {
+    transition: all 0.2s ease;
+}
+
+.admin-card-simple:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+}
+
+.admin-card-simple:hover .text-muted {
+    color: #6c757d !important;
+}
+
+.admin-card-simple:hover .text-primary {
+    color: #0056b3 !important;
+}
 </style>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>
@@ -164,7 +195,13 @@ require_once __DIR__ . '/../includes/header.php';
     <div class="col-12">
         <div class="text-center">
             <h1 class="h2 mb-3 fw-bold text-primary">
-                <i class="bi bi-clipboard-check me-2"></i>Clearance Home
+                <?php if ($currentUser['role'] === 'student'): ?>
+                    <i class="bi bi-person-video3 me-2"></i>Student Home Page
+                <?php elseif ($currentUser['role'] === 'teacher'): ?>
+                    <i class="bi bi-person-badge me-2"></i>Teacher Home Page
+                <?php else: ?>
+                    <i class="bi bi-gear me-2"></i>Admin Home Page
+                <?php endif; ?>
             </h1>
             <p class="lead text-muted">
                 <?php if ($currentUser['role'] === 'student'): ?>
@@ -679,72 +716,78 @@ document.getElementById('returnComplianceForm').addEventListener('submit', funct
 });
 </script>
 <?php else: ?>
-<div class="row g-3">
-    <div class="col-md-6 col-lg-3">
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-4">
         <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/admin/school_years/index.php" class="text-decoration-none">
-            <div class="card h-100 border-primary admin-dashboard-card">
+            <div class="card h-100 border admin-card-simple">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">School Years</span>
-                        <span class="badge bg-primary rounded-pill"><?php echo $counts['school_year']; ?></span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">School Years</h6>
+                            <h3 class="card-title mb-0 text-primary"><?php echo $counts['school_year']; ?></h3>
+                        </div>
+                        <i class="bi bi-calendar3 text-primary" style="font-size: 1.5rem;"></i>
                     </div>
-                    <h5 class="card-title mt-2">School Years</h5>
-                    <p class="card-text small text-muted mb-0">Manage academic years</p>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/admin/departments/index.php" class="text-decoration-none">
-            <div class="card h-100 border-primary admin-dashboard-card">
+            <div class="card h-100 border admin-card-simple">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Departments</span>
-                        <span class="badge bg-primary rounded-pill"><?php echo $counts['departments']; ?></span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Departments</h6>
+                            <h3 class="card-title mb-0 text-primary"><?php echo $counts['departments']; ?></h3>
+                        </div>
+                        <i class="bi bi-building text-primary" style="font-size: 1.5rem;"></i>
                     </div>
-                    <h5 class="card-title mt-2">Departments</h5>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/admin/blocks/index.php" class="text-decoration-none">
-            <div class="card h-100 border-primary admin-dashboard-card">
+            <div class="card h-100 border admin-card-simple">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Blocks</span>
-                        <span class="badge bg-primary rounded-pill"><?php echo $counts['blocks']; ?></span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Blocks</h6>
+                            <h3 class="card-title mb-0 text-primary"><?php echo $counts['blocks']; ?></h3>
+                        </div>
+                        <i class="bi bi-grid-3x3 text-primary" style="font-size: 1.5rem;"></i>
                     </div>
-                    <h5 class="card-title mt-2">Blocks</h5>
-                    <p class="card-text small text-muted mb-0">Sections / blocks</p>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/admin/teachers/index.php" class="text-decoration-none">
-            <div class="card h-100 border-primary admin-dashboard-card">
+            <div class="card h-100 border admin-card-simple">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Teachers</span>
-                        <span class="badge bg-primary rounded-pill"><?php echo $counts['teachers']; ?></span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Teachers</h6>
+                            <h3 class="card-title mb-0 text-primary"><?php echo $counts['teachers']; ?></h3>
+                        </div>
+                        <i class="bi bi-people text-primary" style="font-size: 1.5rem;"></i>
                     </div>
-                    <h5 class="card-title mt-2">Teachers</h5>
-                    <p class="card-text small text-muted mb-0">Authorized personnel</p>
                 </div>
             </div>
         </a>
     </div>
-    <div class="col-md-6 col-lg-3">
+    <div class="col-md-6 col-lg-4">
         <a href="<?php echo rtrim(WEB_BASE, '/'); ?>/admin/students/index.php" class="text-decoration-none">
-            <div class="card h-100 border-primary admin-dashboard-card">
+            <div class="card h-100 border admin-card-simple">
                 <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted">Students</span>
-                        <span class="badge bg-primary rounded-pill"><?php echo $counts['students']; ?></span>
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="card-subtitle text-muted mb-1">Students</h6>
+                            <h3 class="card-title mb-0 text-primary"><?php echo $counts['students']; ?></h3>
+                        </div>
+                        <i class="bi bi-mortarboard text-primary" style="font-size: 1.5rem;"></i>
                     </div>
-                    <h5 class="card-title mt-2">Students</h5>
-                    <p class="card-text small text-muted mb-0">Student records (LRN)</p>
                 </div>
             </div>
         </a>
