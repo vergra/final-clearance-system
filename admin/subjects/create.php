@@ -1,4 +1,12 @@
 <?php
+$strand_id_qs = (int)($_GET['strand_id'] ?? 0);
+if ($strand_id_qs) {
+    header('Location: ../departments/add_subject.php?strand_id=' . $strand_id_qs);
+} else {
+    header('Location: ../departments/index.php');
+}
+exit;
+
 $baseUrl = '..';
 $pageTitle = 'Add Subject';
 require_once __DIR__ . '/../../config/database.php';

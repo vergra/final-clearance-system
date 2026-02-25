@@ -1,4 +1,9 @@
 <?php
+$strand_id = (int)($_GET['strand_id'] ?? 0);
+$redirect = $strand_id ? ('../departments/view_strand.php?id=' . $strand_id) : '../departments/index.php';
+header('Location: ' . $redirect);
+exit;
+
 $baseUrl = '..';
 $pageTitle = 'Subjects';
 require_once __DIR__ . '/../../config/database.php';

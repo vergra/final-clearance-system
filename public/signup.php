@@ -21,7 +21,7 @@ $dbError = '';
 try {
     $blocks = $pdo->query("SELECT block_code, block_name FROM blocks ORDER BY block_code")->fetchAll();
     $departments = $pdo->query("SELECT department_id, department_name FROM departments ORDER BY department_name")->fetchAll(PDO::FETCH_ASSOC);
-    $subjectsData = $pdo->query("SELECT strand, department_id FROM subjects WHERE strand IS NOT NULL AND strand != '' ORDER BY department_id, strand")->fetchAll(PDO::FETCH_ASSOC);
+    $subjectsData = $pdo->query("SELECT strand_id, strand_name, department_id FROM strands ORDER BY department_id, strand_name")->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $blocks = [];
     $departments = [];
@@ -46,8 +46,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
 
-    if ($lrn === '' || $surname === '' || $given_name === '' || !$department_id || $strand === '' || $block_code === '' || $email === '' || $password === '') {
-        $error = 'Please fill in all required fields (LRN, Surname, Given name, Department, Strand, Block, University email, Password).';
+    if ($lrn === '' || $surname === '' || $middle_name === '' || $given_name === '' || !$department_id || $strand === '' || $block_code === '' || $email === '' || $password === '') {
+        $error = 'Please fill in all required fields (LRN, Surname, Middle name, Given name, Department, Strand, Block, University email, Password).';
     } elseif (empty($blocks)) {
         $error = 'No blocks are defined yet. Please ask your administrator to add blocks first.';
     } else {
@@ -72,6 +72,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } elseif ($password !== $password_confirm) {
         $error = 'Password and confirmation do not match.';
     } else {
+        // Convert selected strand_id to strand_name for storing in students.strand (legacy schema)
+        $selectedStrandId = (int)$strand;
+        $selectedStrandName = '';
+        foreach ($subjectsData as $sr) {
+            if ((int)$sr['strand_id'] === $selectedStrandId) {
+                $selectedStrandName = (string)$sr['strand_name'];
+                break;
+            }
+        }
+        if ($selectedStrandName === '') {
+            $error = 'Please select a valid strand from the list.';
+        }
+    }
+
+    if ($error === '') {
         $hasUser = $pdo->prepare('SELECT user_id FROM users WHERE role = ? AND reference_id = ?');
         $hasUser->execute(['student', $lrn]);
         if ($hasUser->fetch()) {
@@ -83,9 +98,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = 'This university email is already registered. Please log in or use a different email.';
             } else {
                 $hash = password_hash($password, PASSWORD_DEFAULT);
-                $ins = $pdo->prepare('INSERT INTO users (username, password_hash, role, reference_id) VALUES (?, ?, ?, ?)');
-                $ins->execute([$email, $hash, 'student', $lrn]);
-                $success = true;
+                $pdo->beginTransaction();
+                try {
+                    // Upsert into students table so clearance form can display Strand/Grade/Block
+                    $st = $pdo->prepare('SELECT lrn FROM students WHERE lrn = ?');
+                    $st->execute([$lrn]);
+                    if ($st->fetchColumn()) {
+                        $up = $pdo->prepare('UPDATE students SET surname = ?, middle_name = ?, given_name = ?, strand = ?, block_code = ? WHERE lrn = ?');
+                        $up->execute([$surname, $middle_name, $given_name, $selectedStrandName, $block_code, $lrn]);
+                    } else {
+                        $in = $pdo->prepare('INSERT INTO students (lrn, surname, middle_name, given_name, strand, block_code) VALUES (?, ?, ?, ?, ?, ?)');
+                        $in->execute([$lrn, $surname, $middle_name, $given_name, $selectedStrandName, $block_code]);
+                    }
+
+                    $ins = $pdo->prepare('INSERT INTO users (username, password_hash, role, reference_id) VALUES (?, ?, ?, ?)');
+                    $ins->execute([$email, $hash, 'student', $lrn]);
+                    $pdo->commit();
+                    $success = true;
+                } catch (PDOException $e) {
+                    $pdo->rollBack();
+                    $error = 'Could not create account. Please try again. Error: ' . $e->getMessage();
+                }
             }
         }
     }
@@ -119,7 +152,7 @@ $base = rtrim(WEB_BASE, '/');
                                 <strong>Account created.</strong> You can now log in with your university email and password.
                             </div>
                             <p class="text-center mb-0">
-                                <a href="<?php echo $base; ?>/public/login.php?as=student&username=<?php echo urlencode($email); ?>" class="btn btn-primary">Proceed to Home</a>
+                                <a href="<?php echo $base; ?>/public/login.php?as=student&username=<?php echo urlencode($email); ?>" class="btn btn-primary">Proceed to Log in</a>
                             </p>
                         <?php else: ?>
                             <?php if ($error): ?>
@@ -160,7 +193,7 @@ $base = rtrim(WEB_BASE, '/');
                                     </div>
                                     <div class="col-md-4">
                                         <label for="middle_name" class="form-label">Middle name</label>
-                                        <input type="text" class="form-control" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($middle_name); ?>" autocomplete="additional-name">
+                                        <input type="text" class="form-control" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($middle_name); ?>" autocomplete="additional-name" required>
                                     </div>
                                 </div>
                                 <div class="mt-2">
@@ -211,20 +244,15 @@ $base = rtrim(WEB_BASE, '/');
     </main>
     <script>
     (function() {
-        var subjectRows = <?php echo json_encode(array_map(function($r) { return ['strand' => $r['strand'], 'department_id' => (int)$r['department_id']]; }, $subjectsData)); ?>;
+        var strandRows = <?php echo json_encode(array_map(function($r) { return ['strand_id' => (int)$r['strand_id'], 'strand_name' => $r['strand_name'], 'department_id' => (int)$r['department_id']]; }, $subjectsData)); ?>;
         var departmentSelect = document.getElementById('department_id');
         var strandSelect = document.getElementById('strand');
 
         function getStrandsForDepartment(departmentId) {
-            var strands = [];
-            var seen = {};
-            subjectRows.forEach(function(r) {
-                if (r.department_id === departmentId && r.strand && !seen[r.strand]) {
-                    seen[r.strand] = true;
-                    strands.push(r.strand);
-                }
-            });
-            return strands.sort();
+            return strandRows
+                .filter(function(r) { return r.department_id === departmentId; })
+                .map(function(r) { return { strand_id: r.strand_id, strand_name: r.strand_name }; })
+                .sort(function(a, b) { return String(a.strand_name).localeCompare(String(b.strand_name)); });
         }
 
         function fillStrands() {
@@ -234,8 +262,8 @@ $base = rtrim(WEB_BASE, '/');
             strandSelect.innerHTML = '<option value="">— Select strand —</option>';
             getStrandsForDepartment(did).forEach(function(s) {
                 var opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s;
+                opt.value = String(s.strand_id);
+                opt.textContent = s.strand_name;
                 strandSelect.appendChild(opt);
             });
         }

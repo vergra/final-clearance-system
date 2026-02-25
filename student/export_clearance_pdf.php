@@ -79,8 +79,20 @@ if (!$clearances) {
 
 // Derive labels
 $yearLabel = (string)($clearances[0]['year_label'] ?? '');
-$departmentName = (string)($clearances[0]['department_name'] ?? '');
-$strandName = (string)($clearances[0]['strand_name'] ?? '');
+
+// Prefer student's saved profile (more reliable)
+$strandName = (string)($student['strand'] ?? '');
+$departmentName = '';
+if ($strandName !== '') {
+    $stmt = $pdo->prepare('SELECT d.department_name FROM strands st JOIN departments d ON d.department_id = st.department_id WHERE st.strand_name = ? LIMIT 1');
+    $stmt->execute([$strandName]);
+    $departmentName = (string)($stmt->fetchColumn() ?: '');
+}
+
+// Fallback to clearance join data
+if ($departmentName === '') {
+    $departmentName = (string)($clearances[0]['department_name'] ?? '');
+}
 $formDate = (string)($clearances[0]['date_submitted'] ?? date('Y-m-d'));
 
 // Build HTML
@@ -97,8 +109,12 @@ foreach ($clearances as $c) {
     $remarks = (string)($c['remarks'] ?? '');
 
     $statusText = htmlspecialchars($status);
-    if ($status === 'Approved' && $dateCleared !== '') {
-        $statusText .= ' (Cleared on ' . htmlspecialchars($dateCleared) . ')';
+    if ($status === 'Approved') {
+        if ($dateCleared !== '') {
+            $statusText = 'Cleared on ' . htmlspecialchars($dateCleared);
+        } else {
+            $statusText = 'Cleared';
+        }
     } elseif ($status === 'Declined' && $remarks !== '') {
         $statusText .= ' (Return for Compliance)';
     }
@@ -136,7 +152,7 @@ $html = '<!doctype html><html><head><meta charset="utf-8">'
     . '</div>'
     . '<div class="box">'
     . '<table class="meta">'
-    . '<tr><td><strong>Name:</strong> ' . htmlspecialchars($studentName) . '</td><td><strong>Grade Block:</strong> ' . htmlspecialchars($block) . '</td></tr>'
+    . '<tr><td><strong>Name:</strong> ' . htmlspecialchars($studentName) . '</td><td><strong>Block:</strong> ' . htmlspecialchars($block) . '</td></tr>'
     . '<tr><td><strong>LRN:</strong> ' . htmlspecialchars($lrn) . '</td><td><strong>Strand:</strong> ' . htmlspecialchars($strandName) . '</td></tr>'
     . '<tr><td><strong>Date Submitted:</strong> ' . htmlspecialchars($formDate) . '</td><td></td></tr>'
     . '</table>'

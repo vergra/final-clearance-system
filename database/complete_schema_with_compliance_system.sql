@@ -37,7 +37,10 @@ CREATE TABLE strands (
     strand_id INT AUTO_INCREMENT PRIMARY KEY,
     strand_name VARCHAR(50) NOT NULL UNIQUE,
     description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    department_id INT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id),
+    INDEX idx_strand_department (department_id)
 );
 
 -- Create school years table
@@ -258,15 +261,15 @@ INSERT INTO departments (department_name, description) VALUES
 ('Elementary', 'Elementary Department'),
 ('Administration', 'School Administration');
 
--- Insert default strands
-INSERT INTO strands (strand_name, description) VALUES
-('STEM', 'Science, Technology, Engineering and Mathematics'),
-('ABM', 'Accountancy, Business and Management'),
-('HUMSS', 'Humanities and Social Sciences'),
-('GAS', 'General Academic Strand'),
-('TVL', 'Technical-Vocational Livelihood'),
-('SPORTS', 'Sports Track'),
-('ARTS & DESIGN', 'Arts and Design Track');
+-- Insert default strands with department assignments
+INSERT INTO strands (strand_name, description, department_id) VALUES
+('STEM', 'Science, Technology, Engineering and Mathematics', 1),
+('ABM', 'Accountancy, Business and Management', 1),
+('HUMSS', 'Humanities and Social Sciences', 1),
+('GAS', 'General Academic Strand', 1),
+('TVL', 'Technical-Vocational Livelihood', 1),
+('SPORTS', 'Sports Track', 1),
+('ARTS & DESIGN', 'Arts and Design Track', 1);
 
 -- Insert default school years
 INSERT INTO school_year (year_label, start_date, end_date, is_current) VALUES

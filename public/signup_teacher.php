@@ -45,8 +45,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $password_confirm = $_POST['password_confirm'] ?? '';
 
-    if ($surname === '' || $given_name === '' || !$department_id || empty($selected_subjects) || $email === '' || $password === '') {
-        $error = 'Please fill in all required fields (Surname, Given name, Department, Subjects, University email, Password).';
+    if ($surname === '' || $middle_name === '' || $given_name === '' || !$department_id || $strand === '' || empty($selected_subjects) || $email === '' || $password === '') {
+        $error = 'Please fill in all required fields (Surname, Middle name, Given name, Department, Strand, Subjects, University email, Password).';
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = 'Please enter a valid university email address.';
     } elseif (strlen($password) < 6) {
@@ -129,19 +129,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 try {
     $departments = $pdo->query("SELECT department_id, department_name FROM departments ORDER BY department_name")->fetchAll();
     
-    // Try to load subjects with strand column, fallback without it
-    try {
-        $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand, department_id FROM subjects ORDER BY subject_name")->fetchAll();
-        $strandsData = $pdo->query("SELECT DISTINCT strand as strand_name, department_id FROM subjects ORDER BY strand")->fetchAll();
-    } catch (PDOException $e) {
-        // If strand column doesn't exist, load subjects without it and get strands from strands table
-        if (strpos($e->getMessage(), 'Unknown column') !== false) {
-            $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand_id, department_id FROM subjects ORDER BY subject_name")->fetchAll();
-            $strandsData = $pdo->query("SELECT strand_id, strand_name, department_id FROM strands ORDER BY strand_name")->fetchAll();
-        } else {
-            throw $e;
-        }
-    }
+    $subjectsData = $pdo->query("SELECT subject_id, subject_name, strand_id, department_id FROM subjects ORDER BY subject_name")->fetchAll();
+    $strandsData = $pdo->query("SELECT strand_id, strand_name, department_id FROM strands ORDER BY strand_name")->fetchAll();
 } catch (PDOException $e) {
     $departments = [];
     $subjectsData = [];
@@ -200,7 +189,7 @@ $base = rtrim(WEB_BASE, '/');
                                     </div>
                                     <div class="col-md-4">
                                         <label for="middle_name" class="form-label">Middle name</label>
-                                        <input type="text" class="form-control" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($middle_name); ?>" autocomplete="additional-name">
+                                        <input type="text" class="form-control" id="middle_name" name="middle_name" value="<?php echo htmlspecialchars($middle_name); ?>" autocomplete="additional-name" required>
                                     </div>
                                 </div>
                                 <div class="mt-2">
@@ -265,16 +254,15 @@ $base = rtrim(WEB_BASE, '/');
             return [
                 'subject_id' => (int)$r['subject_id'], 
                 'subject_name' => $r['subject_name'], 
-                'strand' => $r['strand'] ?? null, // old structure
-                'strand_id' => $r['strand_id'] ?? null, // new structure
+                'strand_id' => isset($r['strand_id']) ? (int)$r['strand_id'] : null,
                 'department_id' => (int)$r['department_id']
             ]; 
         }, $subjectsData ?? [])); ?>;
         
         var strands = <?php echo json_encode(array_map(function($r) { 
             return [
-                'strand_name' => $r['strand_name'] ?? null, // old structure
-                'strand_id' => $r['strand_id'] ?? null, // new structure
+                'strand_name' => $r['strand_name'] ?? null,
+                'strand_id' => isset($r['strand_id']) ? (int)$r['strand_id'] : null,
                 'department_id' => (int)$r['department_id']
             ]; 
         }, $strandsData ?? [])); ?>;
@@ -290,36 +278,21 @@ $base = rtrim(WEB_BASE, '/');
         }
 
         function getStrandsForDepartment(departmentId) {
-            var strandsList = [];
-            var seen = {};
-            if (strands && Array.isArray(strands)) {
-                strands.forEach(function(s) {
-                    var strandName = s.strand_name; // from strands table
-                    if (strandName && s.department_id === departmentId && !seen[strandName]) {
-                        seen[strandName] = true;
-                        strandsList.push(strandName);
-                    }
-                });
+            if (!strands || !Array.isArray(strands)) {
+                return [];
             }
-            // Also check subjects for backward compatibility
-            if (subjects && Array.isArray(subjects)) {
-                subjects.forEach(function(s) {
-                    var strandName = s.strand; // from subjects table
-                    if (strandName && s.department_id === departmentId && !seen[strandName]) {
-                        seen[strandName] = true;
-                        strandsList.push(strandName);
-                    }
-                });
-            }
-            return strandsList.sort();
+            return strands
+                .filter(function(s) { return s.department_id === departmentId; })
+                .map(function(s) { return { strand_id: s.strand_id, strand_name: s.strand_name }; })
+                .sort(function(a, b) { return String(a.strand_name).localeCompare(String(b.strand_name)); });
         }
 
-        function getSubjectsForDepartmentAndStrand(departmentId, strandName) {
+        function getSubjectsForDepartmentAndStrand(departmentId, strandId) {
             if (!subjects || !Array.isArray(subjects)) {
                 return [];
             }
             return subjects.filter(function(s) {
-                return s.department_id === departmentId && s.strand === strandName;
+                return s.department_id === departmentId && s.strand_id === strandId;
             });
         }
 
@@ -333,21 +306,21 @@ $base = rtrim(WEB_BASE, '/');
             }
             getStrandsForDepartment(did).forEach(function(s) {
                 var opt = document.createElement('option');
-                opt.value = s;
-                opt.textContent = s;
+                opt.value = String(s.strand_id);
+                opt.textContent = s.strand_name;
                 strandSelect.appendChild(opt);
             });
         }
 
         function fillSubjects() {
             var did = parseInt(departmentSelect.value, 10);
-            var strandVal = strandSelect.value;
+            var strandId = parseInt(strandSelect.value, 10);
             subjectSelect.innerHTML = '<option value="">— Optional —</option>';
-            if (!did || !strandVal) {
+            if (!did || !strandId) {
                 subjectSelect.innerHTML = '<option value="">— Select strand first —</option>';
                 return;
             }
-            getSubjectsForDepartmentAndStrand(did, strandVal).forEach(function(s) {
+            getSubjectsForDepartmentAndStrand(did, strandId).forEach(function(s) {
                 var opt = document.createElement('option');
                 opt.value = s.subject_id;
                 opt.textContent = s.subject_name;
@@ -362,13 +335,10 @@ $base = rtrim(WEB_BASE, '/');
         strandSelect.addEventListener('change', fillSubjects);
 
         // Initial state: if page has selected values (e.g. validation error), restore them
-        var initialStrand = <?php echo json_encode($strand ?? ''); ?>;
-        var initialSubjectId = <?php echo json_encode((int)($subject_id ?? 0)); ?>;
+        var initialStrandId = 0;
         if (departmentSelect.value) {
             fillStrands();
-            if (initialStrand) { strandSelect.value = initialStrand; }
             fillSubjects();
-            if (initialSubjectId) { subjectSelect.value = String(initialSubjectId); }
         }
     })();
     </script>

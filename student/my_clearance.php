@@ -9,12 +9,11 @@ $lrn = $user['reference_id'];
 
 // Get student info
 $stmt = $pdo->prepare("
-    SELECT s.lrn, s.surname, s.given_name, s.middle_name, s.block_code,
-           d.department_name, st.strand_name, sy.year_label
+    SELECT s.lrn, s.surname, s.middle_name, s.given_name, s.block_code,
+           d.department_name, st.strand_name
     FROM students s
-    LEFT JOIN departments d ON d.department_name LIKE '%Senior%' OR d.department_name = 'Senior High School'
     LEFT JOIN strands st ON st.strand_name = s.strand
-    LEFT JOIN school_year sy ON sy.year_label LIKE '%2025%' OR sy.school_year_id = (SELECT MAX(school_year_id) FROM school_year)
+    LEFT JOIN departments d ON d.department_id = st.department_id
     WHERE s.lrn = ?
 ");
 $stmt->execute([$lrn]);
@@ -156,7 +155,7 @@ require_once __DIR__ . '/../includes/header.php';
                                     <span><?php echo htmlspecialchars($student['surname'] . ', ' . $student['given_name'] . ' ' . $student['middle_name']); ?></span>
                                 </div>
                                 <div class="detail-item">
-                                    <label>Grade Block:</label>
+                                    <label>Block:</label>
                                     <span><?php echo htmlspecialchars($student['block_code']); ?></span>
                                 </div>
                             </div>
@@ -167,7 +166,7 @@ require_once __DIR__ . '/../includes/header.php';
                                 </div>
                                 <div class="detail-item">
                                     <label>Strand:</label>
-                                    <span><?php echo htmlspecialchars($yearData['strand_name']); ?></span>
+                                    <span><?php echo htmlspecialchars($student['strand_name']); ?></span>
                                 </div>
                             </div>
                         </div>

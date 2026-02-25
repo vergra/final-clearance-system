@@ -20,11 +20,20 @@ $departments = $pdo->query("SELECT department_id, department_name FROM departmen
 $schoolYears = $pdo->query("SELECT school_year_id, year_label FROM school_year ORDER BY year_label DESC")->fetchAll();
 $currentSchoolYear = $schoolYears[0] ?? null;
 
-// Get student's block information
-$stmt = $pdo->prepare("SELECT block_code FROM students WHERE lrn = ?");
+// Get student's department from their strand
+$stmt = $pdo->prepare("
+    SELECT s.block_code, s.strand, d.department_name, d.department_id
+    FROM students s
+    LEFT JOIN strands st ON st.strand_name = s.strand
+    LEFT JOIN departments d ON d.department_id = st.department_id
+    WHERE s.lrn = ?
+");
 $stmt->execute([$lrn]);
-$studentBlock = $stmt->fetch();
-$blockCode = $studentBlock ? $studentBlock['block_code'] : '';
+$studentInfo = $stmt->fetch();
+$blockCode = $studentInfo ? $studentInfo['block_code'] : '';
+$studentDepartment = $studentInfo ? $studentInfo['department_name'] : '';
+$studentDepartmentId = $studentInfo ? $studentInfo['department_id'] : 0;
+$studentStrand = $studentInfo ? $studentInfo['strand'] : '';
 
 // Process form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -460,15 +469,9 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="department_id" class="form-label">Department</label>
-                    <div class="select-wrapper">
-                        <select class="form-select" id="department_id" name="department_id" required>
-                            <option value="">Select Department</option>
-                            <?php foreach ($departments as $dept): ?>
-                                <option value="<?php echo $dept['department_id']; ?>"><?php echo htmlspecialchars($dept['department_name']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
+                    <label for="department_display" class="form-label">Department</label>
+                    <input type="text" id="department_display" class="form-control" value="<?php echo htmlspecialchars($studentDepartment); ?>" readonly>
+                    <input type="hidden" id="department_id" name="department_id" value="<?php echo (int)$studentDepartmentId; ?>">
                 </div>
             </div>
             <div class="col-md-6">
@@ -490,9 +493,9 @@ require_once __DIR__ . '/../includes/header.php';
         <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
-                    <label for="strand_id" class="form-label">Strand</label>
+                    <label for="strand_id" class="form-label">Strand (for filtering subjects)</label>
                     <div class="select-wrapper">
-                        <select class="form-select" id="strand_id" name="strand_id" required disabled>
+                        <select class="form-select" id="strand_id" name="strand_id" required>
                             <option value="">Select Strand</option>
                         </select>
                     </div>
@@ -508,9 +511,6 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
                     <label for="teacher_id" class="form-label">Teacher</label>
@@ -521,6 +521,9 @@ require_once __DIR__ . '/../includes/header.php';
                     </div>
                 </div>
             </div>
+        </div>
+        
+        <div class="row">
             <div class="col-md-6">
                 <div class="mb-3">
                     <label>&nbsp;</label>
@@ -661,27 +664,41 @@ document.addEventListener('DOMContentLoaded', function() {
                         option.textContent = strand.strand_name;
                         strandSelect.appendChild(option);
                     });
-                });
+                    strandSelect.disabled = false;
+                })
+                .catch(error => console.error('Error loading strands:', error));
         }
     });
     
+    // Auto-load strands for student's department on page load
+    if (departmentSelect.value) {
+        departmentSelect.dispatchEvent(new Event('change'));
+    }
+    
     strandSelect.addEventListener('change', function() {
         const strandId = this.value;
+        console.log('Strand selected:', strandId);
         subjectSelect.innerHTML = '<option value="">Select Subject</option>';
         subjectSelect.disabled = !strandId;
         teacherSelect.disabled = true;
         
         if (strandId) {
             fetch(`get_subjects.php?strand_id=${strandId}`)
-                .then(response => response.json())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.json();
+                })
                 .then(data => {
+                    console.log('Subjects received:', data);
                     data.forEach(subject => {
                         const option = document.createElement('option');
                         option.value = subject.subject_id;
                         option.textContent = subject.subject_name;
                         subjectSelect.appendChild(option);
                     });
-                });
+                    subjectSelect.disabled = false;
+                })
+                .catch(error => console.error('Error loading subjects:', error));
         }
     });
     
@@ -697,10 +714,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     data.forEach(teacher => {
                         const option = document.createElement('option');
                         option.value = teacher.teacher_id;
-                        option.textContent = `${teacher.surname}, ${teacher.given_name}`;
+                        option.textContent = teacher.surname + ', ' + teacher.given_name;
                         teacherSelect.appendChild(option);
                     });
-                });
+                    teacherSelect.disabled = false;
+                })
+                .catch(error => console.error('Error loading teachers:', error));
         }
     });
     
@@ -903,9 +922,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function displayBondPaper() {
         console.log('Displaying bond paper...');
-        const deptText = departmentSelect.options[departmentSelect.selectedIndex].text;
-        const strandText = strandSelect.options[strandSelect.selectedIndex].text;
-        const schoolYearText = document.getElementById('school_year_id').options[document.getElementById('school_year_id').selectedIndex].text;
+        const deptText = departmentSelect.value && departmentSelect.selectedIndex >= 0 ? departmentSelect.options[departmentSelect.selectedIndex].text : '';
+        const strandText = '<?php echo htmlspecialchars($studentStrand); ?>';
+        const schoolYearSelect = document.getElementById('school_year_id');
+        const schoolYearText = schoolYearSelect && schoolYearSelect.selectedIndex >= 0 ? schoolYearSelect.options[schoolYearSelect.selectedIndex].text : '';
         
         console.log('Setting form values...');
         console.log('Elements found:', {
@@ -947,7 +967,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Create clearance requests for all selected subjects
         const formData = new FormData();
         formData.append('department_id', departmentSelect.value);
-        formData.append('strand_id', strandSelect.value);
+        formData.append('strand_id', '<?php echo htmlspecialchars($studentStrand); ?>');
         formData.append('school_year_id', document.getElementById('school_year_id').value);
         
         // Add all subject-teacher pairs

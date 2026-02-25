@@ -21,11 +21,11 @@ if (!$lrn) {
 }
 
 $department_id = (int)($_POST['department_id'] ?? 0);
-$strand_id = (int)($_POST['strand_id'] ?? 0);
+$strand_name = $_POST['strand_id'] ?? ''; // This is now strand_name from the form
 $school_year_id = (int)($_POST['school_year_id'] ?? 0);
 $subjects = $_POST['subjects'] ?? [];
 
-if (!$department_id || !$strand_id || !$school_year_id || empty($subjects)) {
+if (!$department_id || !$strand_name || !$school_year_id || empty($subjects)) {
     header('Content-Type: application/json');
     echo json_encode(['success' => false, 'message' => 'Missing required fields']);
     exit;

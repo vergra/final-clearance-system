@@ -36,7 +36,7 @@ require_once __DIR__ . '/../../includes/header.php';
     </div>
     <div>
         <a href="view.php?id=<?php echo $strand['department_id']; ?>" class="btn btn-outline-secondary me-2">← Back to Department</a>
-        <a href="../subjects/create.php?strand_id=<?php echo $strand_id; ?>" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Subject</a>
+        <a href="add_subject.php?strand_id=<?php echo $strand_id; ?>" class="btn btn-primary"><i class="bi bi-plus-lg me-1"></i> Add Subject</a>
     </div>
 </div>
 
@@ -62,6 +62,9 @@ require_once __DIR__ . '/../../includes/header.php';
 <?php if (isset($_GET['subject_deleted'])): ?>
     <div class="alert alert-success py-2">Subject deleted.</div>
 <?php endif; ?>
+<?php if (isset($_GET['error'])): ?>
+    <div class="alert alert-danger py-2"><?php echo htmlspecialchars(urldecode($_GET['error'])); ?></div>
+<?php endif; ?>
 <?php if (isset($_GET['strand_created'])): ?>
     <div class="alert alert-success py-2">Strand created. Add your first subject to see it in the department list.</div>
 <?php endif; ?>
@@ -71,7 +74,7 @@ require_once __DIR__ . '/../../includes/header.php';
         <i class="bi bi-book text-muted" style="font-size: 3rem;"></i>
         <h5 class="mt-3">No subjects yet</h5>
         <p class="text-muted">Add your first subject to get started.</p>
-        <a href="../subjects/create.php?strand_id=<?php echo $strand_id; ?>" class="btn btn-primary">Add Subject</a>
+        <a href="add_subject.php?strand_id=<?php echo $strand_id; ?>" class="btn btn-primary">Add Subject</a>
     </div>
 <?php else: ?>
     <div class="card">
@@ -91,8 +94,8 @@ require_once __DIR__ . '/../../includes/header.php';
                                 <td><?php echo htmlspecialchars($subject['subject_name']); ?></td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
-                                        <a href="../subjects/edit.php?id=<?php echo $subject['subject_id']; ?>" class="btn btn-outline-primary">Edit</a>
-                                        <a href="../subjects/delete.php?id=<?php echo $subject['subject_id']; ?>" class="btn btn-outline-danger" onclick="return confirm('Delete this subject?');">Delete</a>
+                                        <a href="edit_subject.php?id=<?php echo $subject['subject_id']; ?>&strand_id=<?php echo $strand_id; ?>" class="btn btn-outline-primary">Edit</a>
+                                        <a href="delete_subject.php?id=<?php echo $subject['subject_id']; ?>&strand_id=<?php echo $strand_id; ?>" class="btn btn-outline-danger" onclick="return confirm('Delete this subject?');">Delete</a>
                                     </div>
                                 </td>
                             </tr>

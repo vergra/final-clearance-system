@@ -32,8 +32,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Invalid strand/department. Please go back and try again.';
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO subjects (subject_name, strand, department_id) VALUES (?, ?, ?)");
-            $stmt->execute([$subject_name, (string)$strand['strand_name'], (int)$strand['department_id']]);
+            $stmt = $pdo->prepare("INSERT INTO subjects (subject_name, strand_id, department_id) VALUES (?, ?, ?)");
+            $stmt->execute([$subject_name, (int)$strand_id, (int)$strand['department_id']]);
             header('Location: view_strand.php?id=' . $strand_id . '&subject_created=1');
             exit;
         } catch (PDOException $e) {
